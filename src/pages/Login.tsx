@@ -239,20 +239,34 @@ export default function Login() {
                 <span className="bg-black px-2 text-white/60">OR CONTINUE WITH</span>
               </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="bg-transparent border-creative-800 hover:bg-creative-900/50 text-white">
-                <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                </svg>
-                Facebook
-              </Button>
-              <Button variant="outline" className="bg-transparent border-creative-800 hover:bg-creative-900/50 text-white">
-                <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
-                  <path d="M15.8 8.4h-1.4c-.5 0-1 .6-1 1.2v1.2h2.4l-.4 2.4h-2v6h-2.4v-6H9.4v-2.4H11V9.8c0-2 1.2-3 2.8-3 .8 0 1.4 0 1.6.2v1.4z" />
-                </svg>
-                Google
+            <div className="grid grid-cols-1 gap-4">
+              <Button variant="outline" className="bg-transparent border-creative-800 hover:bg-creative-900/50 text-white flex items-center justify-center">
+              <svg
+                className="mr-2 h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 48 48"
+                fill="none"
+              >
+                <g>
+                <path
+                  fill="#4285F4"
+                  d="M43.6 20.5H42V20.4H24v7.2h11.2c-1.5 4-5.2 6.8-9.2 6.8-5.6 0-10.2-4.6-10.2-10.2s4.6-10.2 10.2-10.2c2.4 0 4.6.8 6.3 2.2l5.4-5.4C34.2 8.1 29.4 6 24 6 13.5 6 5 14.5 5 25s8.5 19 19 19c9.5 0 18-7.5 18-19 0-1.3-.1-2.2-.4-3.5z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M6.3 14.7l5.9 4.3C14 16.1 18.6 12 24 12c2.4 0 4.6.8 6.3 2.2l5.4-5.4C34.2 8.1 29.4 6 24 6c-7.2 0-13.4 4.1-16.7 8.7z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M24 44c5.4 0 10.2-1.8 13.6-4.9l-6.3-5.2c-1.7 1.2-4 2-7.3 2-4 0-7.7-2.8-9.2-6.8l-6.2 4.8C10.6 39.9 16.8 44 24 44z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M43.6 20.5H42V20.4H24v7.2h11.2c-.7 2-2.1 3.7-3.9 4.9l6.3 5.2c3.7-3.4 5.9-8.4 5.9-14.2 0-1.3-.1-2.2-.4-3.5z"
+                />
+                </g>
+              </svg>
+              Google
               </Button>
             </div>
           </CardContent>

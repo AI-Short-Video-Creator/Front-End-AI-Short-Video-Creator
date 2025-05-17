@@ -59,7 +59,6 @@ const Settings = () => {
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="privacy">Privacy & Security</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
           
           <TabsContent value="appearance">
@@ -199,9 +198,9 @@ const Settings = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="profile-visibility" className="text-base font-medium">Profile Visibility</Label>
+                    <Label htmlFor="profile-visibility" className="text-base font-medium">Show Activity Status</Label>
                     <p className={`text-sm ${theme === "light" ? "text-gray-500" : "text-muted-foreground"}`}>
-                      Make your profile visible to others
+                      Allow the system to track your activity status.
                     </p>
                   </div>
                   <Switch
@@ -222,61 +221,6 @@ const Settings = () => {
                     <Key className="mr-2 h-4 w-4 text-creative-500" />
                     Change Password
                   </Button>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  onClick={handleSaveSettings}
-                  className={theme === "light" ? "bg-creative-500 hover:bg-creative-600 text-white" : "bg-creative-500 hover:bg-creative-700"}
-                >
-                  Save Changes
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="account">
-            <Card className={`border-creative-700 ${theme === "light" ? "bg-white" : "bg-black/60"}`}>
-              <CardHeader>
-                <CardTitle className={theme === "light" ? "text-gray-900" : "text-creative-500"}>Account Settings</CardTitle>
-                <CardDescription className={theme === "light" ? "text-gray-500" : ""}>
-                  Manage your account details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  <div className="grid grid-cols-1 gap-2">
-                    <Label htmlFor="name" className="text-left">Full Name</Label>
-                    <input
-                      id="name"
-                      type="text"
-                      className={`rounded-md border px-3 py-2 ${
-                        theme === "light" 
-                          ? "bg-white border-gray-200 text-gray-900" 
-                          : "bg-black/60 border-creative-800 text-foreground"
-                      }`}
-                      defaultValue="Alex Johnson"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    <Label htmlFor="email" className="text-left">Email</Label>
-                    <input
-                      id="email"
-                      type="email"
-                      className={`rounded-md border px-3 py-2 ${
-                        theme === "light" 
-                          ? "bg-white border-gray-200 text-gray-900" 
-                          : "bg-black/60 border-creative-800 text-foreground"
-                      }`}
-                      defaultValue="alex@example.com"
-                    />
-                  </div>
-                </div>
-                
-                <Separator className={theme === "light" ? "bg-gray-200" : "bg-creative-700"} />
-                
-                <div>
-                  <Button variant="destructive">Delete Account</Button>
                 </div>
               </CardContent>
               <CardFooter>

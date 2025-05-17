@@ -71,22 +71,18 @@ const Profile = () => {
             <CardContent className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Content Summary</h3>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="p-4 rounded-lg bg-black border border-creative-700">
+                <div className="grid grid-cols-2 gap-6 text-center">
+                  <div className="p-6 rounded-lg bg-black border border-creative-700">
                     <p className="text-3xl font-bold text-creative-500">12</p>
                     <p className="text-sm text-muted-foreground">Videos</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-black border border-creative-700">
-                    <p className="text-3xl font-bold text-creative-500">1,204</p>
-                    <p className="text-sm text-muted-foreground">Views</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-black border border-creative-700">
-                    <p className="text-3xl font-bold text-creative-500">83</p>
-                    <p className="text-sm text-muted-foreground">Likes</p>
+                  <div className="p-6 rounded-lg bg-black border border-creative-700">
+                    <p className="text-3xl font-bold text-creative-500">5</p>
+                    <p className="text-sm text-muted-foreground">Downloads</p>
                   </div>
                 </div>
               </div>
-              
+          
               <Separator className="bg-creative-700" />
               
               <div>

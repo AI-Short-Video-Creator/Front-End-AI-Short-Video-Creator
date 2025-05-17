@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Header } from "@/components/navigation/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,16 +9,18 @@ import { TrendingTopics } from "@/components/content/trending-topics"
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = React.useState("")
+  const navigate = useNavigate() 
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Searching for:", searchQuery)
-    // Implement search logic
+    if (searchQuery.trim()) {
+      navigate(`?topic=${encodeURIComponent(searchQuery.trim())}`) // ✅ Redirect
+    }
   }
 
   const handleSelectTopic = (topic: string) => {
-    console.log("Selected topic:", topic)
-    // Implement topic selection logic
+    setSearchQuery(topic)
+    navigate(`/search?topic=${encodeURIComponent(topic)}`)
   }
 
   return (

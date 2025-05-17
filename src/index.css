@@ -1,0 +1,182 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Colors for red-black strong theme */
+    --background: 0 0% 3%; /* Very dark black */
+    --foreground: 0 0% 98%; /* White text */
+
+    --card: 0 0% 10%; /* Dark black card */
+    --card-foreground: 0 0% 98%; /* White foreground card */
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 350 85% 54%; /* Red: #ea384c approx */
+    --primary-foreground: 0 0% 98%; /* White text */
+
+    --secondary: 0 0% 25%; /* Dark gray */
+    --secondary-foreground: 0 0% 90%; /* Light gray */
+
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 70%; /* Medium gray text */
+
+    --accent: 0 0% 20%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 350 85% 54%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 30%;
+    --input: 0 0% 30%;
+    --ring: 350 85% 54%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 75%;
+    --sidebar-primary: 350 90% 45%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 350 90% 45%;
+  }
+
+  .light {
+    /* Light mode theme */
+    --background: 0 0% 100%; /* White */
+    --foreground: 0 0% 10%; /* Dark gray text */
+
+    --card: 0 0% 100%; /* White card */
+    --card-foreground: 0 0% 10%; /* Dark foreground card */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 350 85% 54%; /* Keep red primary */
+    --primary-foreground: 0 0% 100%; /* White text */
+
+    --secondary: 0 0% 95%; /* Light gray */
+    --secondary-foreground: 0 0% 10%; /* Dark gray */
+
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 40%; /* Medium gray text */
+
+    --accent: 0 0% 93%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 350 85% 54%; /* Keep red destructive */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 350 85% 54%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 30%;
+    --sidebar-primary: 350 90% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 350 90% 45%;
+  }
+
+  .dark {
+    /* Dark mode uses same black/red for consistency */
+    --background: 0 0% 3%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 350 85% 54%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 25%;
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 0 0% 20%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 350 85% 54%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 30%;
+    --input: 0 0% 30%;
+    --ring: 350 85% 54%;
+
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 75%;
+    --sidebar-primary: 350 90% 45%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 350 90% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-br from-creative-400 via-creative-500 to-creative-600 bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient {
+    @apply bg-gradient-to-br from-creative-400 via-creative-500 to-creative-600;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.video-container {
+  aspect-ratio: 9/16;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

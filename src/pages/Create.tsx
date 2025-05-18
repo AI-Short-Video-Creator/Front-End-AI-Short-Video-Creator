@@ -130,6 +130,8 @@ export default function Create() {
               script={script}
               handleBack={handleBack}
               handleSaveScript={handleSaveScript}
+              topic={topic}
+              keywords={selectedKeywords}
             />
           )}
           

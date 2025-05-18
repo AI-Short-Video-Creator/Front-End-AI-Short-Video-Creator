@@ -9,12 +9,16 @@ interface ScriptCreationProps {
   script: string;
   handleBack: () => void;
   handleSaveScript: (content: string) => void;
+  topic: string;
+  keywords: string[];
 }
 
 export function ScriptCreation({
   script,
   handleBack,
-  handleSaveScript
+  handleSaveScript,
+  topic,
+  keywords
 }: ScriptCreationProps) {
   return (
     <Card>
@@ -28,6 +32,8 @@ export function ScriptCreation({
         <ScriptEditor 
           initialContent={script} 
           onSave={handleSaveScript}
+          topic={topic}
+          keywords={keywords}
         />
       </CardContent>
       <CardFooter className="flex justify-between">

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sparkles } from "lucide-react"
+import { LoadingSpinner } from "../Loading"
 
 interface TopicSelectionProps {
   topic: string;
@@ -12,6 +13,7 @@ interface TopicSelectionProps {
   selectedKeywords: string[];
   handleKeywordSelect: (keyword: string) => void;
   handleGenerateScript: () => void;
+  isGenerating: boolean;
 }
 
 export function TopicSelection({
@@ -19,7 +21,8 @@ export function TopicSelection({
   setTopic,
   selectedKeywords,
   handleKeywordSelect,
-  handleGenerateScript
+  handleGenerateScript,
+  isGenerating
 }: TopicSelectionProps) {
   return (
     <Card>
@@ -56,8 +59,8 @@ export function TopicSelection({
             onClick={handleGenerateScript}
             disabled={!topic.trim() && selectedKeywords.length === 0}
           >
-            <Sparkles className="h-4 w-4" />
-            Generate Script from Topic
+            {isGenerating ? <LoadingSpinner/> : <Sparkles className="h-4 w-4" />}
+            {isGenerating ? "" : "Generate Script from Topic"}
           </Button>
         </div>
       </CardContent>

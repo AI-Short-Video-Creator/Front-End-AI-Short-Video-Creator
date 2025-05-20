@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,6 +9,7 @@ interface VideoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   thumbnail?: string
   duration?: string
   date?: string
+  url?: string
   onPlay?: () => void
   onDelete?: () => void
   onDownload?: () => void
@@ -20,12 +20,45 @@ export function VideoCard({
   thumbnail,
   duration,
   date,
+  url,
   onPlay,
   onDelete,
   onDownload,
   className, 
   ...props 
 }: VideoCardProps) {
+  const [showPlayer, setShowPlayer] = React.useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const handlePlay = () => {
+    if (url) {
+      setShowPlayer(true);
+      setTimeout(() => {
+        videoRef.current?.play();
+      }, 100);
+    } else if (onPlay) {
+      onPlay();
+    }
+  };
+
+  const handleClosePlayer = () => {
+    setShowPlayer(false);
+    videoRef.current?.pause();
+    videoRef.current?.currentTime && (videoRef.current.currentTime = 0);
+  };
+
+  const handleFullScreen = () => {
+    if (videoRef.current) {
+      if (videoRef.current.requestFullscreen) {
+        videoRef.current.requestFullscreen();
+      } else if ((videoRef.current as any).webkitRequestFullscreen) {
+        (videoRef.current as any).webkitRequestFullscreen();
+      } else if ((videoRef.current as any).msRequestFullscreen) {
+        (videoRef.current as any).msRequestFullscreen();
+      }
+    }
+  };
+
   return (
     <Card 
       className={cn(
@@ -55,13 +88,13 @@ export function VideoCard({
           className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/30 hover:bg-black/50 h-10 w-10"
           size="icon"
           variant="ghost"
-          onClick={onPlay}
+          onClick={handlePlay}
         >
           <Play fill="white" className="ml-0.5" />
         </Button>
       </div>
       <CardContent className="p-3">
-        <h3 className="font-medium text-sm truncate mb-1">{title}</h3>
+        <h3 className="font-medium text-sm truncate mb-1 text-creative-300">{title}</h3>
         {date && <p className="text-xs text-muted-foreground mb-2">{date}</p>}
         <div className="flex gap-2 justify-end">
           <Button 
@@ -82,6 +115,27 @@ export function VideoCard({
           </Button>
         </div>
       </CardContent>
+      {showPlayer && url && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+          <div className="relative w-full max-w-3xl h-[60vh] flex flex-col items-center justify-center">
+            <video
+              ref={videoRef}
+              src={url}
+              controls
+              className="w-full h-full bg-black rounded-lg"
+              style={{ maxHeight: '60vh' }}
+            />
+            <div className="absolute top-2 right-2 flex gap-2">
+              <Button size="icon" variant="ghost" onClick={handleFullScreen}>
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M4 8V4h4m8 0h4v4m0 8v4h-4m-8 0H4v-4"/></svg>
+              </Button>
+              <Button size="icon" variant="ghost" onClick={handleClosePlayer}>
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M6 6l12 12M6 18L18 6"/></svg>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }

@@ -9,7 +9,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
 // Mock video data
@@ -17,7 +16,7 @@ const initialVideos = [
   {
     id: 1,
     title: "AI trends in 2025",
-    thumbnail: "",
+    thumbnail: "https://i.ytimg.com/vi/h8-qemIbXbo/maxresdefault.jpg",
     duration: "0:45",
     date: "April 21, 2025",
     url: "https://res.cloudinary.com/du7gb47mh/video/upload/kllynt7byxrplhq6g7q9.mp4"
@@ -25,7 +24,7 @@ const initialVideos = [
   {
     id: 2,
     title: "Sustainable living tips",
-    thumbnail: "",
+    thumbnail: "https://i.ytimg.com/vi/h8-qemIbXbo/maxresdefault.jpg",
     duration: "0:32",
     date: "April 19, 2025",
     url: "https://res.cloudinary.com/du7gb47mh/video/upload/kllynt7byxrplhq6g7q9.mp4"
@@ -33,7 +32,7 @@ const initialVideos = [
   {
     id: 3,
     title: "Mental health awareness",
-    thumbnail: "",
+    thumbnail: "https://i.ytimg.com/vi/h8-qemIbXbo/maxresdefault.jpg",
     duration: "0:58",
     date: "April 15, 2025",
     url: "https://res.cloudinary.com/du7gb47mh/video/upload/kllynt7byxrplhq6g7q9.mp4"
@@ -41,7 +40,7 @@ const initialVideos = [
   {
     id: 4,
     title: "Future of remote work",
-    thumbnail: "",
+    thumbnail: "https://i.ytimg.com/vi/h8-qemIbXbo/maxresdefault.jpg",
     duration: "0:36",
     date: "April 10, 2025",
     url: "https://res.cloudinary.com/du7gb47mh/video/upload/kllynt7byxrplhq6g7q9.mp4"
@@ -49,7 +48,7 @@ const initialVideos = [
   {
     id: 5,
     title: "Tech gadgets review",
-    thumbnail: "",
+    thumbnail: "https://i.ytimg.com/vi/h8-qemIbXbo/maxresdefault.jpg",
     duration: "0:42",
     date: "April 5, 2025",
     url: "https://res.cloudinary.com/du7gb47mh/video/upload/kllynt7byxrplhq6g7q9.mp4"
@@ -57,7 +56,7 @@ const initialVideos = [
   {
     id: 6,
     title: "Easy recipes for beginners",
-    thumbnail: "",
+    thumbnail: "https://i.ytimg.com/vi/h8-qemIbXbo/maxresdefault.jpg",
     duration: "0:39",
     date: "April 1, 2025",
     url: "https://res.cloudinary.com/du7gb47mh/video/upload/kllynt7byxrplhq6g7q9.mp4"

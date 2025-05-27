@@ -10,22 +10,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Home, LogIn, Plus, Search, Settings, User } from "lucide-react"
-import { toast } from "sonner"
+import { Home, LogIn, Plus, User } from "lucide-react"
 import { useTheme } from "@/lib/theme"
+import useAuth from "@/hooks/data/useAuth"
 
 export function Header() {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  
-  // Mock auth state - in a real app this would come from your auth provider
-  const [isLoggedIn, setIsLoggedIn] = React.useState(true);
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    // Mock logout functionality
-    setIsLoggedIn(false);
-    toast.success("Logged out successfully");
-    navigate("/login");
+    logout();
   };
 
   return (
@@ -60,7 +55,7 @@ export function Header() {
               <Plus className="h-4 w-4 mr-1" /> NEW VIDEO
             </Link>
           </Button>
-          {isLoggedIn ? (
+          {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 

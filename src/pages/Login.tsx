@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,11 +7,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import useAuth from "@/hooks/data/useAuth";
 
 export default function Login() {
-  const navigate = useNavigate();
+  const { isSigningIn, signIn, signUp, isSigningUp } = useAuth();
   const [showPassword, setShowPassword] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
   
   // Login form state
   const [loginEmail, setLoginEmail] = React.useState("");
@@ -32,14 +31,13 @@ export default function Login() {
       return;
     }
     
-    setIsLoading(true);
-    
-    // Mock authentication
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Login successful!");
-      navigate("/");
-    }, 1500);
+    signIn({
+      email: loginEmail,
+      password: loginPassword,
+    })
+
+    setLoginEmail("");
+    setLoginPassword("");
   };
   
   const handleSignup = async (e: React.FormEvent) => {
@@ -55,14 +53,16 @@ export default function Login() {
       return;
     }
     
-    setIsLoading(true);
-    
-    // Mock registration
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Account created successfully!");
-      navigate("/");
-    }, 1500);
+    signUp({
+      fullname: signupName,
+      email: signupEmail,
+      password: signupPassword,
+    });
+
+    setSignupName("");
+    setSignupEmail("");
+    setSignupPassword("");
+    setSignupConfirmPassword("");
   };
   
   return (
@@ -132,9 +132,9 @@ export default function Login() {
                   <Button 
                     type="submit" 
                     className="w-full bg-creative-500 hover:bg-creative-600 text-white" 
-                    disabled={isLoading}
+                    disabled={isSigningIn}
                   >
-                    {isLoading ? (
+                    {isSigningIn ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                         Signing in...
@@ -213,9 +213,9 @@ export default function Login() {
                   <Button 
                     type="submit" 
                     className="w-full bg-creative-500 hover:bg-creative-600 text-white" 
-                    disabled={isLoading}
+                    disabled={isSigningUp}
                   >
-                    {isLoading ? (
+                    {isSigningUp ? (
                       <span className="flex items-center gap-2">
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                         Creating account...

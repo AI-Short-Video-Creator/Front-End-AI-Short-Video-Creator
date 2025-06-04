@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { Header } from "@/components/navigation/header"
@@ -32,6 +31,10 @@ export default function Create() {
   const [selectedVoice, setSelectedVoice] = React.useState<number | null>(null)
   const [selectedKeywords, setSelectedKeywords] = React.useState<string[]>([])
   const [downloadProgress, setDownloadProgress] = React.useState(0)
+  const [contentStyle, setContentStyle] = React.useState("")
+  const [language, setLanguage] = React.useState("")
+  const [wordCount, setWordCount] = React.useState(100)
+  
   
   const totalSteps = 4
   
@@ -54,6 +57,9 @@ export default function Create() {
     const scriptData = {
       topic,
       keywords: selectedKeywords,
+      contentStyle,
+      language,
+      wordCount,
     }
 
     const script = await createScriptAsync(scriptData)
@@ -86,19 +92,6 @@ export default function Create() {
     setSelectedVoice(voiceId)
   }
   
-  const handleDownload = () => {
-    console.log("Downloading video...")
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setDownloadProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        navigate("/library")
-      }
-    }, 300);
-  }
-  
   const handleKeywordSelect = (keyword: string) => {
     if (selectedKeywords.includes(keyword)) {
       setSelectedKeywords(selectedKeywords.filter(k => k !== keyword))
@@ -122,6 +115,12 @@ export default function Create() {
               handleKeywordSelect={handleKeywordSelect}
               handleGenerateScript={handleGenerateScript}
               isGenerating={isCreatingScript}
+              contentStyle={contentStyle}
+              setContentStyle={setContentStyle}
+              language={language}
+              setLanguage={setLanguage}
+              wordCount={wordCount}
+              setWordCount={setWordCount}
             />
           )}
           

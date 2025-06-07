@@ -5,23 +5,22 @@ import { RefreshCw } from "lucide-react"
 import useScript from "@/hooks/data/useScript"
 import { useToast } from "@/hooks/use-toast"
 import { LoadingSpinner } from "../Loading"
+import { ScriptCreationArgs } from "../create/ScriptCreation"
 
 interface ScriptEditorProps {
   initialContent?: string
   onSave?: (content: string) => void
-  topic: string
-  keywords: string[]
+  args: ScriptCreationArgs
 }
 
-export function ScriptEditor({ initialContent = "", onSave, topic, keywords }: ScriptEditorProps) {
+export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditorProps) {
   const [content, setContent] = React.useState(initialContent)
   const { createScriptAsync, isCreatingScript } = useScript()
   const { toast } = useToast()
 
   const handleGenerate = async () => {
     const script = await createScriptAsync({
-      topic,
-      keywords,
+      ...args,
     })
 
     if (script.data) {

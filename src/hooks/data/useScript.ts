@@ -3,8 +3,11 @@ import { useToast } from "../use-toast";
 import axiosInstance from "@/config";
 
 export type CreateScriptRequest = {
-  keywords: string[];
-  topic: string;
+    keywords: string[];
+    topic: string;
+    style?: string;
+    language?: string;
+    wordCount?: number;
 }
 
 const useScript = () => {
@@ -14,6 +17,9 @@ const useScript = () => {
             const res = await axiosInstance.post("/script/", {
                 keywords: data.keywords,
                 topic: data.topic,
+                style: data.style,
+                language: data.language,
+                wordCount: data.wordCount,
             });
             return res.data;
         },

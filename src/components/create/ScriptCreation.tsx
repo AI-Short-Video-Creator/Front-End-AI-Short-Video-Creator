@@ -5,20 +5,25 @@ import { Button } from "@/components/ui/button"
 import { ScriptEditor } from "@/components/content/script-editor"
 import { ArrowLeft } from "lucide-react"
 
+export type ScriptCreationArgs = {
+  topic: string;
+  keywords: string[];
+  style: string;
+  language: string;
+  wordCount: number;
+}
 interface ScriptCreationProps {
   script: string;
   handleBack: () => void;
   handleSaveScript: (content: string) => void;
-  topic: string;
-  keywords: string[];
+  args: ScriptCreationArgs;
 }
 
 export function ScriptCreation({
   script,
   handleBack,
   handleSaveScript,
-  topic,
-  keywords
+  args
 }: ScriptCreationProps) {
   return (
     <Card>
@@ -32,8 +37,7 @@ export function ScriptCreation({
         <ScriptEditor 
           initialContent={script} 
           onSave={handleSaveScript}
-          topic={topic}
-          keywords={keywords}
+          args={args}
         />
       </CardContent>
       <CardFooter className="flex justify-between">

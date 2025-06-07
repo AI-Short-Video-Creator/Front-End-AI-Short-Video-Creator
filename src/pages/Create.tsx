@@ -57,7 +57,7 @@ export default function Create() {
     const scriptData = {
       topic,
       keywords: selectedKeywords,
-      contentStyle,
+      style: contentStyle,
       language,
       wordCount,
     }
@@ -129,8 +129,13 @@ export default function Create() {
               script={script}
               handleBack={handleBack}
               handleSaveScript={handleSaveScript}
-              topic={topic}
-              keywords={selectedKeywords}
+              args={{
+                topic,
+                keywords: selectedKeywords,
+                style: contentStyle,
+                language,
+                wordCount
+              }}
             />
           )}
           

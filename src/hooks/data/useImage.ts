@@ -5,24 +5,33 @@ import axiosInstance from "@/config";
 const useImage = () => {
     const { toast } = useToast();
 
-    const { isSuccess: isCreatedImage, mutateAsync: createImagetAsync, isPending: isCreatingImage } = useMutation({
-        mutationFn: async (data: string) => {
+    const { isSuccess: isCreatedImage, mutateAsync: createImagetAsync, isPending: isCreatingImage, data: imageData } = useMutation({
+        mutationFn: async ({ script, themes }: { script: string; themes?: string }) => {
+            console.log("Sending payload:", { script, themes });
             const res = await axiosInstance.post("/image/", {
-                script: data,
+                script,
+                themes,
             });
             console.log("Image created:", res);
             return res.data;
         },
         onSuccess: (data) => {
-            toast({
-                title: "Create Image",
-                description: "Images created successfully",
-            });
+            if (data.data.length < data.session_id.split('_').length) {
+                toast({
+                    title: "Create Image",
+                    description: `Generated ${data.data.length} images. Some scenes failed due to rate limits.`,
+                });
+            } else {
+                toast({
+                    title: "Create Image",
+                    description: "Images created successfully",
+                });
+            }
         },
-        onError: (error) => {
+        onError: (error: any) => {
             toast({
                 title: "Create Image",
-                description: error.message,
+                description: error.response?.data?.error || error.message,
                 variant: "destructive",
             });
         },
@@ -30,6 +39,7 @@ const useImage = () => {
 
     const { isSuccess: isRegeneratedImage, mutateAsync: regenerateImageAsync, isPending: isRegeneratingImage } = useMutation({
         mutationFn: async ({ image_id, session_id }: { image_id: string; session_id: string }) => {
+            console.log("Regenerating image:", { image_id, session_id });
             const res = await axiosInstance.post("/image/regenerate", {
                 image_id,
                 session_id,
@@ -43,10 +53,10 @@ const useImage = () => {
                 description: "Image regenerated successfully",
             });
         },
-        onError: (error) => {
+        onError: (error: any) => {
             toast({
                 title: "Regenerate Image",
-                description: error.message,
+                description: error.response?.data?.error || error.message,
                 variant: "destructive",
             });
         },
@@ -56,6 +66,7 @@ const useImage = () => {
         isCreatedImage,
         createImagetAsync,
         isCreatingImage,
+        imageData,
         isRegeneratedImage,
         regenerateImageAsync,
         isRegeneratingImage,

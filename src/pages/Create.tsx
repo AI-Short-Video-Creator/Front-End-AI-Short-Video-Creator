@@ -1,48 +1,50 @@
-import * as React from "react"
-import { useNavigate, useLocation } from "react-router-dom"
-import { Header } from "@/components/navigation/header"
-import { StepIndicator } from "@/components/ui/step-indicator"
-import { TopicSelection } from "@/components/create/TopicSelection"
-import { ScriptCreation } from "@/components/create/ScriptCreation"
-import { ImageCreation } from "@/components/create/ImageCreation"
-import { VideoCreator } from "@/components/create/VideoCreate"
-import useScript from "@/hooks/data/useScript"
-import useImage from "@/hooks/data/useImage"
-import { useToast } from "@/hooks/use-toast"
+import * as React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Header } from "@/components/navigation/header";
+import { StepIndicator } from "@/components/ui/step-indicator";
+import { TopicSelection } from "@/components/create/TopicSelection";
+import { ScriptCreation } from "@/components/create/ScriptCreation";
+import {ImageCreation} from "@/components/create/ImageCreation";
+import { VideoCreator } from "@/components/create/VideoCreator";
+import useScript from "@/hooks/data/useScript";
+import useImage from "@/hooks/data/useImage";
+import useVideo from "@/hooks/data/useVideo";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Create() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { createScriptAsync, isCreatingScript } = useScript()
-  const { createImagetAsync, isCreatingImage } = useImage()
-  const { toast } = useToast()
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { createScriptAsync, isCreatingScript } = useScript();
+  const { createImagetAsync, isCreatingImage } = useImage();
+  const { createVideoAsync, isCreatingVideo } = useVideo();
+  const { toast } = useToast();
 
-  // Get topic from URL if available
   React.useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const urlTopic = params.get('topic')
+    const params = new URLSearchParams(location.search);
+    const urlTopic = params.get("topic");
     if (urlTopic) {
-      setTopic(urlTopic)
-      handleGenerateScript()
+      setTopic(urlTopic);
+      handleGenerateScript();
     }
-  }, [location.search])
+  }, [location.search]);
 
-  const [currentStep, setCurrentStep] = React.useState(1)
-  const [topic, setTopic] = React.useState("")
-  const [script, setScript] = React.useState("")
-  const [selectedVoice, setSelectedVoice] = React.useState(null)
-  const [selectedKeywords, setSelectedKeywords] = React.useState([])
-  const [imageUrls, setImageUrls] = React.useState([]) // New state for image URLs
-  const [downloadProgress, setDownloadProgress] = React.useState(0)
-  const [sessionId, setSessionId] = React.useState("") // Track session
+  const [currentStep, setCurrentStep] = React.useState(1);
+  const [topic, setTopic] = React.useState("");
+  const [script, setScript] = React.useState("");
+  const [selectedVoice, setSelectedVoice] = React.useState(null);
+  const [selectedKeywords, setSelectedKeywords] = React.useState([]);
+  const [imageUrls, setImageUrls] = React.useState([]);
+  const [downloadProgress, setDownloadProgress] = React.useState(0);
+  const [sessionId, setSessionId] = React.useState("");
+  const [videoUrl, setVideoUrl] = React.useState(""); // Changed from videoPath
 
-  const totalSteps = 4
+  const totalSteps = 4;
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   const handleGenerateScript = async () => {
     if (!topic) {
@@ -50,86 +52,106 @@ export default function Create() {
         title: "Error",
         description: "Please enter a topic.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    const scriptData = {
-      topic,
-      keywords: selectedKeywords,
-    }
-
-    const scriptResponse = await createScriptAsync(scriptData)
-    if (scriptResponse) {
-      setScript(scriptResponse.data)
-      setCurrentStep(2)
-    } else {
+    try {
+      const scriptResponse = await createScriptAsync({ topic, keywords: selectedKeywords });
+      if (scriptResponse) {
+        setScript(scriptResponse.data);
+        setCurrentStep(2);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to generate script.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to generate script.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
-  const handleSaveScript = async (content) => {
-    setScript(content)
-    console.log("Saving script:", content)
-    // Fetch images when saving script
+  const handleSaveScript = async (content: string) => {
+    setScript(content);
+    console.log("Saving script:", content);
     try {
-      const imageUrlsResponse = await createImagetAsync(content)
-      console.log("Image URLs response:", imageUrlsResponse)
+      const imageUrlsResponse = await createImagetAsync({ script: content, themes: "realistic" });
+      console.log("Image URLs response:", imageUrlsResponse);
       if (imageUrlsResponse) {
-        setImageUrls(imageUrlsResponse.data)
-        setSessionId(imageUrlsResponse.session_id) // Store session_id
-        setCurrentStep(3)
+        setImageUrls(imageUrlsResponse.data);
+        setSessionId(imageUrlsResponse.session_id);
+        setCurrentStep(3);
       } else {
         toast({
           title: "Error",
           description: "Failed to generate images.",
           variant: "destructive",
-        })
+        });
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to generate images.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
-  const handleCreateVideo = () => {
-    console.log("Creating video...")
-    setTimeout(() => {
-      setCurrentStep(4)
-    }, 2000)
-  }
+  const handleCreateVideo = async () => {
+    console.log("Creating video...");
+    try {
+      const image_urls = imageUrls.map((item: any) => item.image_url);
+      const voices = imageUrls.map((item: any) => item.voice);
+      const videoResponse = await createVideoAsync({ image_urls, voices });
+      if (videoResponse) {
+        setVideoUrl(videoResponse.video_url); // Changed from video_path
+        setCurrentStep(4);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create video.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create video.",
+        variant: "destructive",
+      });
+    }
+  };
 
-  const handleSelectVoice = (voiceId) => {
-    setSelectedVoice(voiceId)
-  }
+  const handleSelectVoice = (voiceId: any) => {
+    setSelectedVoice(voiceId);
+  };
 
   const handleDownload = () => {
-    console.log("Downloading video...")
-    let progress = 0
+    console.log("Preparing download...");
+    let progress = 0;
     const interval = setInterval(() => {
-      progress += 10
-      setDownloadProgress(progress)
+      progress += 10;
+      setDownloadProgress(progress);
       if (progress >= 100) {
-        clearInterval(interval)
-        navigate("/library")
+        clearInterval(interval);
+        navigate("/library");
       }
-    }, 300)
-  }
+    }, 300);
+  };
 
-  const handleKeywordSelect = (keyword) => {
+  const handleKeywordSelect = (keyword: string) => {
     if (selectedKeywords.includes(keyword)) {
-      setSelectedKeywords(selectedKeywords.filter(k => k !== keyword))
+      setSelectedKeywords(selectedKeywords.filter((k) => k !== keyword));
     } else {
-      setSelectedKeywords([...selectedKeywords, keyword])
+      setSelectedKeywords([...selectedKeywords, keyword]);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -166,8 +188,8 @@ export default function Create() {
               handleSelectVoice={handleSelectVoice}
               handleCreateVideo={handleCreateVideo}
               script={script}
-              imageUrls={imageUrls} // Pass imageUrls
-              sessionId={sessionId} // Pass sessionId
+              imageUrls={imageUrls}
+              sessionId={sessionId}
             />
           )}
           
@@ -176,10 +198,11 @@ export default function Create() {
               downloadProgress={downloadProgress}
               handleBack={handleBack}
               handleDownload={handleDownload}
+              videoUrl={videoUrl} // Changed from videoPath
             />
           )}
         </div>
       </main>
     </div>
-  )
+  );
 }

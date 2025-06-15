@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Home, LogIn, Plus, User } from "lucide-react"
+import { Home, LogIn, Plus, User, Share2, BarChart } from "lucide-react"
 import { useTheme } from "@/lib/theme"
 import useAuth from "@/hooks/data/useAuth"
 
@@ -41,6 +41,12 @@ export function Header() {
             </Link>
             <Link to="/library" className={`flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors ${theme === "light" ? "text-gray-800" : ""}`}>
               <User className="w-5 h-5 text-creative-500" /> MY VIDEOS
+            </Link>
+            <Link to="/share" className={`flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors ${theme === "light" ? "text-gray-800" : ""}`}>
+              <Share2 className="w-5 h-5 text-creative-500" /> SHARE
+            </Link>
+            <Link to="/analytics" className={`flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors ${theme === "light" ? "text-gray-800" : ""}`}>
+              <BarChart className="w-5 h-5 text-creative-500" /> ANALYTICS
             </Link>
           </nav>
         </div>

@@ -14,6 +14,8 @@ import Settings from "./pages/Settings";
 import AllTrendingTopics from "./pages/AllTrendingTopics";
 import { ThemeProvider } from "./lib/theme";
 import AuthShield from "./components/auth/AuthShield";
+import Share from "./pages/Share";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const App = () => (
               {/* <Route path="/library" element={<Library />} /> */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/share" element={<Share />} />
+              <Route path="/analytics" element={<Analytics />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

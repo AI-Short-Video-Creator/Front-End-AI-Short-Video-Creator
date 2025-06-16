@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -6,24 +5,53 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sparkles } from "lucide-react"
 import { LoadingSpinner } from "../Loading"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import LanguageList from "language-list"
+import useSuggestion from "@/hooks/data/useSuggestion"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 
 interface TopicSelectionProps {
-  topic: string;
-  setTopic: (topic: string) => void;
-  selectedKeywords: string[];
+  keyword: string;
+  setKeyword: (keyword: string) => void;
   handleKeywordSelect: (keyword: string) => void;
   handleGenerateScript: () => void;
   isGenerating: boolean;
+  contentStyle: string;
+  setContentStyle: (style: string) => void;
+  language: string;
+  setLanguage: (lang: string) => void;
+  wordCount: number;
+  setWordCount: (count: number) => void;
 }
 
 export function TopicSelection({
-  topic,
-  setTopic,
-  selectedKeywords,
+  keyword,
+  setKeyword,
   handleKeywordSelect,
   handleGenerateScript,
-  isGenerating
+  isGenerating,
+  contentStyle,
+  setContentStyle,
+  language,
+  setLanguage,
+  wordCount,
+  setWordCount
 }: TopicSelectionProps) {
+  const languages = React.useMemo(() => new LanguageList().getData(), [])
+  const [searchTerm, setSearchTerm] = React.useState("")
+  const filteredLanguages = React.useMemo(
+    () =>
+      languages.filter(lang =>
+        lang.language.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [languages, searchTerm]
+  )
+  const [source, setSource] = React.useState("youtube");
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+
+  const debouncedKeyword = useDebouncedValue(keyword, 300);
+  const { suggestions } = useSuggestion(debouncedKeyword, 5, source);
+
   return (
     <Card>
       <CardHeader>
@@ -34,19 +62,67 @@ export function TopicSelection({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Source selection with Select */}
           <div>
+            <label className="block mb-1 text-sm font-medium">Choose Source:</label>
+            <Select value={source} onValueChange={setSource}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="youtube">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="text-red-500"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a2.994 2.994 0 0 0-2.107-2.117C19.228 3.5 12 3.5 12 3.5s-7.228 0-9.391.569A2.994 2.994 0 0 0 .502 6.186C0 8.36 0 12 0 12s0 3.64.502 5.814a2.994 2.994 0 0 0 2.107 2.117C4.772 20.5 12 20.5 12 20.5s7.228 0 9.391-.569a2.994 2.994 0 0 0 2.107-2.117C24 15.64 24 12 24 12s0-3.64-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></span>
+                    YouTube
+                  </span>
+                </SelectItem>
+                <SelectItem value="wiki">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="text-blue-500"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 5.523 4.477 10 10 10s10-4.477 10-10c0-5.523-4.477-10-10-10zm.001 18c-4.418 0-8-3.582-8-8 0-4.418 3.582-8 8-8 4.418 0 8 3.582 8 8 0 4.418-3.582 8-8 8zm.001-14c-3.313 0-6 2.687-6 6 0 3.313 2.687 6 6 6 3.313 0 6-2.687 6-6 0-3.313-2.687-6-6-6zm0 10c-2.209 0-4-1.791-4-4 0-2.209 1.791-4 4-4 2.209 0 4 1.791 4 4 0 2.209-1.791 4-4 4z"/></svg></span>
+                    Wikipedia
+                  </span>
+                </SelectItem>
+                <SelectItem value="google">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="text-sky-500"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75l11.06-11.06-3.75-3.75L3 17.25zm17.71-10.04a1.003 1.003 0 0 0 0-1.42l-2.5-2.5a1.003 1.003 0 0 0-1.42 0l-2.12 2.12 3.75 3.75 2.29-2.29z"/></svg></span>
+                    Google Trends
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Keyword input with suggestions */}
+          <div className="relative">
             <Input
-              placeholder="Enter a topic (e.g., AI in everyday life, Sustainability tips)"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
+              placeholder="Enter a keyword (e.g., AI in everyday life, Sustainability tips)"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
               className="text-base"
+              onFocus={() => keyword && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
             />
+            {showSuggestions && suggestions?.length > 0 && (
+              <div className="absolute left-0 right-0 mt-1 z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-80 max-h-48 overflow-y-auto">
+                {suggestions?.map((s: string, idx: number) => (
+                  <div
+                    key={s}
+                    className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-5 py-1.5 text-sm outline-none transition-colors text-foreground hover:bg-accent hover:text-accent-foreground data-[state=selected]:bg-primary data-[state=selected]:text-primary-foreground"
+                    onMouseDown={() => {
+                      setKeyword(s);
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    {s}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {["AI", "Tech", "Fashion", "Health", "Finance", "Education"].map((tag) => (
               <Badge 
                 key={tag}
-                variant={selectedKeywords.includes(tag) ? "default" : "outline"}
+                variant={keyword === tag ? "default" : "outline"}
                 className="cursor-pointer"
                 onClick={() => handleKeywordSelect(tag)}
               >
@@ -54,13 +130,63 @@ export function TopicSelection({
               </Badge>
             ))}
           </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium">Content Style</label>
+            <Select value={contentStyle} onValueChange={setContentStyle}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Informative">Informative</SelectItem>
+                <SelectItem value="Entertaining">Entertaining</SelectItem>
+                <SelectItem value="Inspirational">Inspirational</SelectItem>
+                <SelectItem value="Educational">Educational</SelectItem>
+                <SelectItem value="Storytelling">Storytelling</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium">Language</label>
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                <div className="px-2 py-2 sticky top-0 z-10">
+                  <Input
+                    placeholder="Search language..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="mb-2"
+                  />
+                </div>
+                <div style={{ maxHeight: 240, overflowY: 'auto' }}>
+                  {filteredLanguages.map(lang => (
+                    <SelectItem key={lang.code} value={lang.code}>{lang.language}</SelectItem>
+                  ))}
+                </div>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium">Word Count</label>
+            <Input
+              type="number"
+              min={30}
+              max={500}
+              value={wordCount}
+              onChange={e => setWordCount(Number(e.target.value))}
+              className="text-base"
+              placeholder="Enter word count (e.g., 100)"
+            />
+          </div>
           <Button 
             className="w-full gap-2"
             onClick={handleGenerateScript}
-            disabled={!topic.trim() && selectedKeywords.length === 0}
+            disabled={!keyword.trim() || isGenerating}
           >
             {isGenerating ? <LoadingSpinner/> : <Sparkles className="h-4 w-4" />}
-            {isGenerating ? "" : "Generate Script from Topic"}
+            {isGenerating ? "" : "Generate Script"}
           </Button>
         </div>
       </CardContent>

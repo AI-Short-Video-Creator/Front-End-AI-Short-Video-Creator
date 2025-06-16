@@ -113,7 +113,6 @@ export function LibraryGrid() {
             thumbnail={video.thumbnail}
             duration={video.duration}
             date={video.date}
-            url={video.url}
             onDelete={() => handleDeleteClick(video.id)}
             onDownload={() => handleDownload(video.id)}
           />

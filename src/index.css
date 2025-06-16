@@ -172,6 +172,10 @@
   aspect-ratio: 9/16;
 }
 
+.video-container-social {
+  aspect-ratio: 16/9;
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

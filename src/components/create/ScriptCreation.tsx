@@ -6,8 +6,7 @@ import { ScriptEditor } from "@/components/content/script-editor"
 import { ArrowLeft } from "lucide-react"
 
 export type ScriptCreationArgs = {
-  topic: string;
-  keywords: string[];
+  keyword: string;
   style: string;
   language: string;
   wordCount: number;

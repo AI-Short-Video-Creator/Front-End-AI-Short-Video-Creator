@@ -1,6 +1,5 @@
-
 import * as React from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import { Header } from "@/components/navigation/header"
 import { StepIndicator } from "@/components/ui/step-indicator"
 import { TopicSelection } from "@/components/create/TopicSelection"
@@ -11,7 +10,6 @@ import useScript from "@/hooks/data/useScript"
 import { useToast } from "@/hooks/use-toast"
 
 export default function Create() {
-  const navigate = useNavigate()
   const location = useLocation()
   const { createScriptAsync, isCreatingScript } = useScript()
   const { toast } = useToast()
@@ -19,19 +17,22 @@ export default function Create() {
   // Get topic from URL if available
   React.useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const urlTopic = params.get('topic');
-    if (urlTopic) {
-      setTopic(urlTopic);
+    const urlKeyword = params.get('keyword');
+    if (urlKeyword) {
+      setKeyword(urlKeyword);
       handleGenerateScript();
     }
   }, [location.search]);
   
   const [currentStep, setCurrentStep] = React.useState(1)
-  const [topic, setTopic] = React.useState("")
+  const [keyword, setKeyword] = React.useState("")
   const [script, setScript] = React.useState("")
   const [selectedVoice, setSelectedVoice] = React.useState<number | null>(null)
-  const [selectedKeywords, setSelectedKeywords] = React.useState<string[]>([])
   const [downloadProgress, setDownloadProgress] = React.useState(0)
+  const [contentStyle, setContentStyle] = React.useState("")
+  const [language, setLanguage] = React.useState("")
+  const [wordCount, setWordCount] = React.useState(100)
+  
   
   const totalSteps = 4
   
@@ -42,18 +43,20 @@ export default function Create() {
   }
 
   const handleGenerateScript = async () => {
-    if (!topic) {
+    if (!keyword.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a topic.",
+        description: "Please enter a keyword.",
         variant: "destructive",
       })
       return
     }
 
     const scriptData = {
-      topic,
-      keywords: selectedKeywords,
+      keyword,
+      style: contentStyle,
+      language,
+      wordCount,
     }
 
     const script = await createScriptAsync(scriptData)
@@ -68,14 +71,6 @@ export default function Create() {
       })
     }
   }
-
-  const handleCreateVideo = () => {
-    console.log("Creating video...")
-    // Simulate video creation delay
-    setTimeout(() => {
-      setCurrentStep(4)
-    }, 2000)
-  }
   
   const handleSaveScript = (content: string) => {
     setScript(content)
@@ -86,25 +81,8 @@ export default function Create() {
     setSelectedVoice(voiceId)
   }
   
-  const handleDownload = () => {
-    console.log("Downloading video...")
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setDownloadProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        navigate("/library")
-      }
-    }, 300);
-  }
-  
   const handleKeywordSelect = (keyword: string) => {
-    if (selectedKeywords.includes(keyword)) {
-      setSelectedKeywords(selectedKeywords.filter(k => k !== keyword))
-    } else {
-      setSelectedKeywords([...selectedKeywords, keyword])
-    }
+    setKeyword(keyword)
   }
   
   return (
@@ -116,12 +94,17 @@ export default function Create() {
           
           {currentStep === 1 && (
             <TopicSelection 
-              topic={topic}
-              setTopic={setTopic}
-              selectedKeywords={selectedKeywords}
+              keyword={keyword}
+              setKeyword={setKeyword}
               handleKeywordSelect={handleKeywordSelect}
               handleGenerateScript={handleGenerateScript}
               isGenerating={isCreatingScript}
+              contentStyle={contentStyle}
+              setContentStyle={setContentStyle}
+              language={language}
+              setLanguage={setLanguage}
+              wordCount={wordCount}
+              setWordCount={setWordCount}
             />
           )}
           
@@ -130,8 +113,12 @@ export default function Create() {
               script={script}
               handleBack={handleBack}
               handleSaveScript={handleSaveScript}
-              topic={topic}
-              keywords={selectedKeywords}
+              args={{
+                keyword,
+                style: contentStyle,
+                language,
+                wordCount
+              }}
             />
           )}
           

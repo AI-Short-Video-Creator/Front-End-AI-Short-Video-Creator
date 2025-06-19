@@ -29,6 +29,8 @@ export function VideoCard({
 }: VideoCardProps) {
   const [showPlayer, setShowPlayer] = React.useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
 
   const handlePlay = () => {
     if (url) {
@@ -59,15 +61,32 @@ export function VideoCard({
     }
   };
 
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuOpen]);
+
   return (
     <Card 
       className={cn(
-        "border border-border/40 bg-white shadow-sm overflow-hidden",
+        "border border-border/40 bg-white shadow-sm overflow-hidden flex flex-col w-full max-w-2xl",
         className
       )} 
       {...props}
     >
-      <div className="relative video-container bg-gray-100">
+      {/* Thumbnail/video section */}
+      <div className="relative bg-gray-100 aspect-[16/9] w-full">
         {thumbnail ? (
           <img 
             src={thumbnail} 
@@ -93,26 +112,18 @@ export function VideoCard({
           <Play fill="white" className="ml-0.5" />
         </Button>
       </div>
-      <CardContent className="p-3">
-        <h3 className="font-medium text-sm truncate mb-1 text-creative-300">{title}</h3>
-        {date && <p className="text-xs text-muted-foreground mb-2">{date}</p>}
-        <div className="flex gap-2 justify-end">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="h-7 text-xs px-2"
-            onClick={onDelete}
-          >
-            <Trash2 size={12} className="mr-1" /> Delete
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="h-7 text-xs px-2"
-            onClick={onDownload}
-          >
-            <Download size={12} className="mr-1" /> Download
-          </Button>
+      {/* Title, date, menu section */}
+      <CardContent className="p-3 flex flex-row items-center w-full gap-2">
+        <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex flex-row items-center gap-2">
+            <h3 className="font-semibold text-base text-creative-300 truncate flex-1" title={title}>{title}</h3>
+            <Button size="icon" variant="ghost" onClick={onDownload}>
+              <Download size={18} className="text-blue-500" />
+            </Button>
+            <Button size="icon" variant="ghost" onClick={onDelete}>
+              <Trash2 size={18} className="text-red-500" />
+            </Button>
+          </div>
         </div>
       </CardContent>
       {showPlayer && url && (

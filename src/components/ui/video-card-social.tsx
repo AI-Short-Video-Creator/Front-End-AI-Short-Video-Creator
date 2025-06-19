@@ -176,7 +176,7 @@ export function VideoCard({
                                             <img
                                                 src="/logos/tiktok.png"
                                                 alt="TikTok"
-                                                className="h-4 w-4 inline-flex items-center justify-center h-5 w-5 rounded bg-white"
+                                                className="h-4 w-4 inline-flex items-center justify-center rounded bg-white"
                                             />
                                             <img
                                                 src="/logos/insert_link.png"

@@ -8,7 +8,7 @@ export type Video = {
     thumbnail?: string;
     duration?: string;
     date?: string;
-    url?: string;
+    video_path?: string;
 }
 
 export function useVideo() {
@@ -21,8 +21,15 @@ export function useVideo() {
   } = useQuery({
     queryKey: ["videos"],
     queryFn: async () => {
-      const response = await axiosInstance.get("/videos");
-      return (response.data as Video[]) || [];
+      const response = await axiosInstance.get("/videos/");
+      console.log("Fetched videos:", response.data);
+      return (response.data as any[]).map(item => ({
+        id: item._id.$oid,
+        title: item.title,
+        thumbnail: item.thumbnail,
+        date: item.created_at.$date,
+        video_path: item.video_path,
+      })) as Video[];
     },
   });
 
@@ -37,6 +44,7 @@ export function useVideo() {
         title: "Video deleted",
         description: "The video has been successfully deleted.",
       });
+      refetchVideos && refetchVideos();
     },
     onError: () => {
       toast({
@@ -46,5 +54,35 @@ export function useVideo() {
     },
   });
 
-  return { videos, isLoadingVideos, refetchVideos, deleteVideo };
+  const {
+    mutate: importVideo,
+    isPending: isImportingVideo
+  } = useMutation({
+    mutationFn: async (data: { file: File; title: string; thumbnail?: File }) => {
+      const formData = new FormData();
+      formData.append("file", data.file);
+      formData.append("title", data.title);
+      if (data.thumbnail) {
+        formData.append("thumbnail", data.thumbnail);
+      }
+      await axiosInstance.post("/videos/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Video imported",
+        description: "The video has been successfully imported.",
+      });
+      refetchVideos && refetchVideos();
+    },
+    onError: () => {
+      toast({
+        title: "Error importing video",
+        description: "There was an error importing the video.",
+      });
+    },
+  });
+
+  return { videos, isLoadingVideos, refetchVideos, deleteVideo, importVideo, isImportingVideo };
 }

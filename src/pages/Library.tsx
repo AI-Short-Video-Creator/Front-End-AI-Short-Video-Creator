@@ -5,16 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { LibraryGrid } from "@/components/content/library-grid"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 
 export default function Library() {
   const [searchQuery, setSearchQuery] = React.useState("")
-  
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Searching for:", searchQuery)
-    // Implement search logic
-  }
-  
+  const debouncedSearch = useDebouncedValue(searchQuery, 300)
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -26,7 +22,7 @@ export default function Library() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <form onSubmit={handleSearch} className="relative flex-1">
+            <form onSubmit={e => e.preventDefault()} className="relative flex-1">
               <Input 
                 className="pr-10"
                 placeholder="Search videos..."
@@ -34,7 +30,6 @@ export default function Library() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Button 
-                type="submit" 
                 size="icon" 
                 variant="ghost" 
                 className="absolute right-0 top-0 h-10 w-10"
@@ -45,7 +40,7 @@ export default function Library() {
           </div>
         </div>
         
-        <LibraryGrid />
+        <LibraryGrid search={debouncedSearch} />
       </main>
     </div>
   )

@@ -2,15 +2,17 @@ import * as React from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { RefreshCw } from "lucide-react"
-import useScript from "@/hooks/data/useScript"
+import useScript, { PersonalStyle } from "@/hooks/data/useScript"
 import { useToast } from "@/hooks/use-toast"
 import { LoadingSpinner } from "../Loading"
-import { ScriptCreationArgs } from "../create/ScriptCreation"
 
 interface ScriptEditorProps {
   initialContent?: string
   onSave?: (content: string) => void
-  args: ScriptCreationArgs
+  args?: {
+    keyword?: string,
+    personalStyle?: PersonalStyle
+  }
 }
 
 export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditorProps) {
@@ -20,7 +22,16 @@ export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditor
 
   const handleGenerate = async () => {
     const script = await createScriptAsync({
-      ...args,
+      keyword: args?.keyword || "",
+      personalStyle: args?.personalStyle || {
+        style: "informative",
+        language: "en",
+        wordCount: 100,
+        tone: "neutral",
+        perspective: "third",
+        humor: "none",
+        quotes: "no",
+      }
     })
 
     if (script.data) {
@@ -45,7 +56,7 @@ export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditor
         <Button
           variant="outline"
           size="sm"
-          className="gap-2"
+          className="gap-2 min-w-[120px]"
           onClick={handleGenerate}
           disabled={isCreatingScript}
         >

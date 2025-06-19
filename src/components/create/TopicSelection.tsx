@@ -9,6 +9,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import LanguageList from "language-list"
 import useSuggestion from "@/hooks/data/useSuggestion"
 import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { PersonalStyle } from "@/hooks/data/useScript"
 
 interface TopicSelectionProps {
   keyword: string;
@@ -16,12 +17,8 @@ interface TopicSelectionProps {
   handleKeywordSelect: (keyword: string) => void;
   handleGenerateScript: () => void;
   isGenerating: boolean;
-  contentStyle: string;
-  setContentStyle: (style: string) => void;
-  language: string;
-  setLanguage: (lang: string) => void;
-  wordCount: number;
-  setWordCount: (count: number) => void;
+  personalStyle: PersonalStyle;
+  handleChange: (field: string, value: any) => void;
 }
 
 export function TopicSelection({
@@ -30,12 +27,8 @@ export function TopicSelection({
   handleKeywordSelect,
   handleGenerateScript,
   isGenerating,
-  contentStyle,
-  setContentStyle,
-  language,
-  setLanguage,
-  wordCount,
-  setWordCount
+  personalStyle,
+  handleChange
 }: TopicSelectionProps) {
   const languages = React.useMemo(() => new LanguageList().getData(), [])
   const [searchTerm, setSearchTerm] = React.useState("")
@@ -132,22 +125,22 @@ export function TopicSelection({
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium">Content Style</label>
-            <Select value={contentStyle} onValueChange={setContentStyle}>
+            <Select value={personalStyle.style} onValueChange={(value) => handleChange("style", value)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select style" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Informative">Informative</SelectItem>
-                <SelectItem value="Entertaining">Entertaining</SelectItem>
-                <SelectItem value="Inspirational">Inspirational</SelectItem>
-                <SelectItem value="Educational">Educational</SelectItem>
-                <SelectItem value="Storytelling">Storytelling</SelectItem>
+                <SelectItem value="informative">Informative</SelectItem>
+                <SelectItem value="entertaining">Entertaining</SelectItem>
+                <SelectItem value="inspirational">Inspirational</SelectItem>
+                <SelectItem value="educational">Educational</SelectItem>
+                <SelectItem value="storytelling">Storytelling</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium">Language</label>
-            <Select value={language} onValueChange={setLanguage}>
+            <Select value={personalStyle.language} onValueChange={(value) => handleChange("language", value)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
@@ -174,18 +167,74 @@ export function TopicSelection({
               type="number"
               min={30}
               max={500}
-              value={wordCount}
-              onChange={e => setWordCount(Number(e.target.value))}
+              value={personalStyle.wordCount}
+              onChange={e => handleChange("wordCount", Number(e.target.value))}
               className="text-base"
               placeholder="Enter word count (e.g., 100)"
             />
+          </div>
+          {/* Personal Style Fields */}
+          <div>
+            <label className="block mb-1 text-sm font-medium">Tone</label>
+            <Select value={personalStyle.tone} onValueChange={(value) => handleChange("tone", value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select tone" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="neutral">Neutral</SelectItem>
+                <SelectItem value="friendly">Friendly</SelectItem>
+                <SelectItem value="professional">Professional</SelectItem>
+                <SelectItem value="humorous">Humorous</SelectItem>
+                <SelectItem value="dramatic">Dramatic</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium">Perspective</label>
+            <Select value={personalStyle.perspective} onValueChange={(value) => handleChange("perspective", value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select perspective" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="first">First Person (I/We)</SelectItem>
+                <SelectItem value="second">Second Person (You)</SelectItem>
+                <SelectItem value="third">Third Person (He/She/They)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium">Humor</label>
+            <Select value={personalStyle.humor} onValueChange={(value) => handleChange("humor", value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select humor level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="light">Light</SelectItem>
+                <SelectItem value="moderate">Moderate</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium">Use of Quotes</label>
+            <Select value={personalStyle.quotes} onValueChange={(value) => handleChange("quotes", value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select option" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="no">No</SelectItem>
+                <SelectItem value="sometimes">Sometimes</SelectItem>
+                <SelectItem value="often">Often</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Button 
             className="w-full gap-2"
             onClick={handleGenerateScript}
             disabled={!keyword.trim() || isGenerating}
           >
-            {isGenerating ? <LoadingSpinner/> : <Sparkles className="h-4 w-4" />}
+            {isGenerating ? <LoadingSpinner /> : <Sparkles className="h-4 w-4" />}
             {isGenerating ? "" : "Generate Script"}
           </Button>
         </div>

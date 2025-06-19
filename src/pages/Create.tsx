@@ -14,7 +14,6 @@ export default function Create() {
   const { createScriptAsync, isCreatingScript } = useScript()
   const { toast } = useToast()
   
-  // Get topic from URL if available
   React.useEffect(() => {
     const params = new URLSearchParams(location.search);
     const urlKeyword = params.get('keyword');
@@ -27,13 +26,21 @@ export default function Create() {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [keyword, setKeyword] = React.useState("")
   const [script, setScript] = React.useState("")
-  const [selectedVoice, setSelectedVoice] = React.useState<number | null>(null)
-  const [downloadProgress, setDownloadProgress] = React.useState(0)
-  const [contentStyle, setContentStyle] = React.useState("")
-  const [language, setLanguage] = React.useState("")
-  const [wordCount, setWordCount] = React.useState(100)
-  
-  
+
+  const [personalStyle, setPersonalStyle] = React.useState({
+    style: "informative",
+    language: "en",
+    wordCount: 100,
+    tone: "neutral",
+    perspective: "third",
+    humor: "none",
+    quotes: false,
+  })
+
+  const handleChange = (field: string, value: any) => {
+    setPersonalStyle(prev => ({ ...prev, [field]: value }))
+  }
+
   const totalSteps = 4
   
   const handleBack = () => {
@@ -54,9 +61,15 @@ export default function Create() {
 
     const scriptData = {
       keyword,
-      style: contentStyle,
-      language,
-      wordCount,
+      personalStyle: {
+        style: personalStyle.style,
+        language: personalStyle.language,
+        wordCount: personalStyle.wordCount,
+        tone: personalStyle.tone,
+        perspective: personalStyle.perspective,
+        humor: personalStyle.humor,
+        quotes: personalStyle.quotes,
+      }
     }
 
     const script = await createScriptAsync(scriptData)
@@ -77,10 +90,6 @@ export default function Create() {
     setCurrentStep(3)
   }
   
-  const handleSelectVoice = (voiceId: number) => {
-    setSelectedVoice(voiceId)
-  }
-  
   const handleKeywordSelect = (keyword: string) => {
     setKeyword(keyword)
   }
@@ -99,12 +108,8 @@ export default function Create() {
               handleKeywordSelect={handleKeywordSelect}
               handleGenerateScript={handleGenerateScript}
               isGenerating={isCreatingScript}
-              contentStyle={contentStyle}
-              setContentStyle={setContentStyle}
-              language={language}
-              setLanguage={setLanguage}
-              wordCount={wordCount}
-              setWordCount={setWordCount}
+              personalStyle={personalStyle}
+              handleChange={handleChange}
             />
           )}
           
@@ -113,12 +118,7 @@ export default function Create() {
               script={script}
               handleBack={handleBack}
               handleSaveScript={handleSaveScript}
-              args={{
-                keyword,
-                style: contentStyle,
-                language,
-                wordCount
-              }}
+              personalStyle={personalStyle}
             />
           )}
           

@@ -34,7 +34,7 @@ export default function Create() {
     tone: "neutral",
     perspective: "third",
     humor: "none",
-    quotes: false,
+    quotes: "no",
   })
 
   const handleChange = (field: string, value: any) => {
@@ -114,7 +114,8 @@ export default function Create() {
           )}
           
           {currentStep === 2 && (
-            <ScriptCreation 
+            <ScriptCreation
+              keyword={keyword} 
               script={script}
               handleBack={handleBack}
               handleSaveScript={handleSaveScript}

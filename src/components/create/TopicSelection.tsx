@@ -218,7 +218,7 @@ export function TopicSelection({
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium">Use of Quotes</label>
-            <Select value={personalStyle.quotes ? "yes" : "no"} onValueChange={(value) => handleChange("quotes", value === "yes")}>
+            <Select value={personalStyle.quotes} onValueChange={(value) => handleChange("quotes", value)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select option" />
               </SelectTrigger>
@@ -234,7 +234,7 @@ export function TopicSelection({
             onClick={handleGenerateScript}
             disabled={!keyword.trim() || isGenerating}
           >
-            {isGenerating ? <LoadingSpinner/> : <Sparkles className="h-4 w-4" />}
+            {isGenerating ? <LoadingSpinner /> : <Sparkles className="h-4 w-4" />}
             {isGenerating ? "" : "Generate Script"}
           </Button>
         </div>

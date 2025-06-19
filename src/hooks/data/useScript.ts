@@ -14,7 +14,7 @@ export type PersonalStyle = {
     tone: string;
     perspective: string;
     humor: string;
-    quotes: boolean;
+    quotes: string;
 }
 
 const useScript = () => {

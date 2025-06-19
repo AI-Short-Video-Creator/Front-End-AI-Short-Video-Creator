@@ -30,7 +30,7 @@ export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditor
         tone: "neutral",
         perspective: "third",
         humor: "none",
-        quotes: false,
+        quotes: "no",
       }
     })
 
@@ -56,7 +56,7 @@ export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditor
         <Button
           variant="outline"
           size="sm"
-          className="gap-2"
+          className="gap-2 min-w-[120px]"
           onClick={handleGenerate}
           disabled={isCreatingScript}
         >

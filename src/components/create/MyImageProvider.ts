@@ -6,6 +6,8 @@ import {
 } from '@imgly/plugin-ai-generation-web';
 import type CreativeEditorSDK from '@cesdk/cesdk-js';
 import apiSchema from './myApiSchema.json';
+import axios from 'axios';
+
 
 // Define your input type based on your schema
 interface MyProviderInput {
@@ -18,7 +20,7 @@ interface MyProviderInput {
 // Create a function that returns your provider
 export function MyImageProvider({
   apiKey,
-  apiUrl = 'https://your-api-url.com',
+  apiUrl = "https://api.together.xyz/v1/images/generations",
 }: {
   apiKey: string;
   apiUrl?: string;
@@ -75,23 +77,12 @@ export function MyImageProvider({
           // Example of upload middleware that stores generated images on your server
           uploadMiddleware(async output => {
             // Upload the image to your server
-            const response = await fetch('https://your-server.com/api/upload', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                url: output.url,
-                type: 'ai-generated-image',
-              }),
-            });
-
-            const result = await response.json();
-
-            // Return the output with the updated URL from your server
+            console.log('Uploading image to server:', output.url);
+            // const response = await uploadToCloudinary(output.url)
+            // console.log('Upload response:', response);
             return {
               ...output,
-              url: result.storedImageUrl,
+              url: output.url, // Adjust based on your upload logic
             };
           }),
         ],
@@ -115,14 +106,16 @@ export function MyImageProvider({
             const response = await fetch(apiUrl, {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${apiKey}`,
+                "Access-Control-Allow-Origin": "*",
+                "Authorization": `Bearer aa6f6daa3c5d4ae20ebe0df6a66c80474908b61aedcd0d5f4c73cb45a5a60ef1`,
+                "Content-Type": "application/json"
               },
               body: JSON.stringify({
+                model: "black-forest-labs/FLUX.1-schnell-Free",
                 prompt: input.prompt,
-                width: input.width,
-                height: input.height,
-                style: input.style,
+                steps: 4,
+                n: 1,
+                guidance_scale: 0.0
               }),
               signal: abortSignal,
             });
@@ -131,12 +124,13 @@ export function MyImageProvider({
               throw new Error(`API error: ${response.statusText}`);
             }
 
-            const data = await response.json();
-
+            const result = await response.json();
+            console.log('Image generation response:', result);
+            console.log('Generated image URL:', result.data[0].url);
             // Return the image URL
             return {
               kind: 'image',
-              url: data.imageUrl, // Replace with the actual property from your API response
+              url: result.data[0].url, // Adjust based on your API response structure
             };
           } catch (error) {
             console.error('Image generation failed:', error);

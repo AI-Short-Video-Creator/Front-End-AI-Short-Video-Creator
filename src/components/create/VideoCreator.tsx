@@ -44,7 +44,7 @@ export function VideoCreator({
             </video>
             {downloadProgress > 0 && downloadProgress < 100 && (
               <div>
-                <p>Preparing download...</p>
+                <p>Preparing video...</p>
                 <Progress value={downloadProgress} className="w-full" />
               </div>
             )}
@@ -59,7 +59,7 @@ export function VideoCreator({
         </Button>
         {videoUrl && (
           <Button onClick={handleDownloadVideo} disabled={downloadProgress > 0 && downloadProgress < 100}>
-            <Download className="mr-2 h-4 w-4" /> {downloadProgress === 0 ? "Download Video" : "Preparing..."}
+            <Download className="mr-2 h-4 w-4" /> {downloadProgress === 0 ? "Creating Video" : "Preparing..."}
           </Button>
         )}
       </CardFooter>

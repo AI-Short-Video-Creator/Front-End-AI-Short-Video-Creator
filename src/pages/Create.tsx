@@ -6,6 +6,7 @@ import { TopicSelection } from "@/components/create/TopicSelection";
 import { ScriptCreation } from "@/components/create/ScriptCreation";
 import {ImageCreation} from "@/components/create/ImageCreation";
 import { VideoCreator } from "@/components/create/VideoCreator";
+import CreativeEditor from "@/components/create/CreativeEditor";
 import useScript from "@/hooks/data/useScript";
 import useImage from "@/hooks/data/useImage";
 import useVideo from "@/hooks/data/useVideo";
@@ -105,27 +106,7 @@ export default function Create() {
 
   const handleCreateVideo = async () => {
     console.log("Creating video...");
-    try {
-      const image_urls = imageUrls.map((item: any) => item.image_url);
-      const voices = imageUrls.map((item: any) => item.voice);
-      const videoResponse = await createVideoAsync({ image_urls, voices });
-      if (videoResponse) {
-        setVideoUrl(videoResponse.video_url); // Changed from video_path
-        setCurrentStep(4);
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to create video.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create video.",
-        variant: "destructive",
-      });
-    }
+    setCurrentStep(4);
   };
 
   const handleSelectVoice = (voiceId: any) => {
@@ -194,13 +175,14 @@ export default function Create() {
           )}
           
           {currentStep === 4 && (
-            <VideoCreator
+            <CreativeEditor
               downloadProgress={downloadProgress}
               handleBack={handleBack}
-              handleDownload={handleDownload}
-              videoUrl={videoUrl} // Changed from videoPath
+              mediaObject={{mediaUrls: imageUrls, audioUrl: ""}} // Changed from videoPath
             />
           )}
+
+          
         </div>
       </main>
     </div>

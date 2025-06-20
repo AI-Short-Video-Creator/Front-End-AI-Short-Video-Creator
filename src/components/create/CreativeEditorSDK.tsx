@@ -38,35 +38,8 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
           license: "ptq_RSnnXDTByfEVnRDm8bN0GN_fWcmlJ-sGx8Hi7rJ4QaUL9V9fupRCIQFvFF17",
           callbacks: {
             onUpload: "local",
-            onSave: async () => {
-              try {
-                const sceneData = await cesdkInstance!.engine.scene.saveToString();
-                localStorage.setItem("cesdk_scene", sceneData);
-                toast({
-                  title: "Success",
-                  description: "Scene saved successfully.",
-                });
-              } catch (error) {
-                console.error("Save failed:", error);
-                toast({
-                  title: "Error",
-                  description: "Failed to save scene.",
-                  variant: "destructive",
-                });
-              }
-            },
-            onDownload: async () => {
-              try {
-                await handleDownload();
-              } catch (error) {
-                console.error("Download failed:", error);
-                toast({
-                  title: "Error",
-                  description: "Failed to download video.",
-                  variant: "destructive",
-                });
-              }
-            },
+            onDownload: 'download',
+            onExport: 'download'
           },
           ui: {
             elements: {

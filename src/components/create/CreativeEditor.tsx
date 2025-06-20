@@ -12,15 +12,26 @@ import CreativeEditorSDK from "@cesdk/cesdk-js";
 import ImageGeneration from "@imgly/plugin-ai-image-generation-web";
 import { useToast } from "@/hooks/use-toast";
 import { MyImageProvider } from "./MyImageProvider";
+import { ArrowLeft } from "lucide-react";
+type mediaInfo = {
+  image_id: string;
+  image_url: string;
+  scene: string;
+  voice: string;
+};
 
-interface CreativeEditorSDKComponentProps {
+interface CreativeEditorSDKProps {
+  downloadProgress: number,
+  handleBack: () => void,
   mediaObject: {
-    mediaUrls: string[];
+    mediaUrls: mediaInfo[];
     audioUrl: string;
   };
 }
 
-const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
+const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
+  downloadProgress,
+  handleBack,
   mediaObject
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -123,7 +134,8 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
 
         let currentOffset = 0;
 
-        for (const url of mediaObject.mediaUrls) {
+        for (const element of mediaObject.mediaUrls) {
+          const url = element.image_url;
           const isVideo = url.toLowerCase().endsWith(".mp4");
           const graphic = engine.block.create("graphic");
           engine.block.setShape(graphic, engine.block.createShape("rect"));
@@ -150,13 +162,14 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
           console.log("set currentOffset", currentOffset);
         }
 
-        // Add audio
+        if( mediaObject.audioUrl) {
         const audioBlock = engine.block.create("audio");
         engine.block.appendChild(page, audioBlock);
         engine.block.setString(audioBlock, "audio/fileURI", mediaObject.audioUrl);
         engine.block.setTimeOffset(audioBlock, 0);
         engine.block.setDuration(audioBlock, currentOffset);
         engine.block.setVolume(audioBlock, 0.7);
+        }
         engine.block.setDuration(page, currentOffset);
       } catch (error) {
         console.error("createSceneFromMediaObject failed", error);
@@ -209,6 +222,9 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
         />
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
+         <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
         <Button onClick={handleDownload} disabled={isExporting || !cesdk}>
           <Download className="mr-2 h-4 w-4" />
           {isExporting ? "Exporting..." : "Download Video"}
@@ -218,4 +234,4 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
   );
 };
 
-export default CreativeEditorSDKComponent;
+export default CreativeEditor;

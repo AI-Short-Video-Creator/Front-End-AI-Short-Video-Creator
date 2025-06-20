@@ -8,6 +8,7 @@ import { ScriptCreation } from "@/components/create/ScriptCreation"
 // import { VideoResult } from "@/components/create/VideoResult"
 import useScript from "@/hooks/data/useScript"
 import { useToast } from "@/hooks/use-toast"
+import { readTextFromFile } from "@/helpers/readScriptFromFile"
 
 export default function Create() {
   const location = useLocation()
@@ -93,7 +94,21 @@ export default function Create() {
   const handleKeywordSelect = (keyword: string) => {
     setKeyword(keyword)
   }
-  
+
+  const handleImportScript = (file: File) => {
+    const content = readTextFromFile(file)
+    content.then(text => {
+      setScript(text)
+      setCurrentStep(2)
+    }).catch(error => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    })
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -110,6 +125,7 @@ export default function Create() {
               isGenerating={isCreatingScript}
               personalStyle={personalStyle}
               handleChange={handleChange}
+              handleImportScript={handleImportScript}
             />
           )}
           

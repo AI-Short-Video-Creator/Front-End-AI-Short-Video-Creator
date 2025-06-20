@@ -13,7 +13,7 @@ interface CreativeEditorSDKComponentProps {
 }
 
 const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
-  imageUrls = [ "https://res.cloudinary.com/create-video-ai/image/upload/v1749499201/video_creator/images/bdbd833d-a179-4fcd-9466-ddab7dba9372.jpg"],
+  imageUrls = [ "https://res.cloudinary.com/create-video-ai/image/upload/v1749499201/video_creator/images/bdbd833d-a179-4fcd-9466-ddab7dba9372.jpg","https://res.cloudinary.com/create-video-ai/image/upload/v1749499201/video_creator/images/bdbd833d-a179-4fcd-9466-ddab7dba9372.jpg"],
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -21,9 +21,6 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
   const isInitialized = useRef(false);
-
-  // Memoize imageUrls to prevent unnecessary re-renders
-  const memoizedImageUrls = useMemo(() => imageUrls, [JSON.stringify(imageUrls)]);
 
   useEffect(() => {
     let cesdkInstance: CreativeEditorSDK | null = null;
@@ -135,14 +132,17 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
           await createVideoSceneWithImages(cesdkInstance);
         //}
 
-        cesdkInstance.ui.setDockOrder([
-          "ly.img.ai/image-generation.dock",
-          "ly.img.assetLibrary.dock",
-          "ly.img.videoTimeline.dock",
+          cesdkInstance.ui.setDockOrder([
+            'ly.img.ai/image-generation.dock',
+            ...cesdkInstance.ui.getDockOrder(),
+          ]);
 
-        ]);
-
-        cesdkInstance.ui.setBackgroundTrackAssetLibraryEntries(["ly.img.video", "ly.img.audio"]);
+        cesdkInstance.ui.setBackgroundTrackAssetLibraryEntries(["ly.img.image", "ly.img.video", "ly.img.audio"]);
+        cesdkInstance.ui.setCanvasMenuOrder([
+            'ly.img.ai.text.canvasMenu',
+            'ly.img.ai.image.canvasMenu',
+            ...cesdkInstance.ui.getCanvasMenuOrder(),
+          ]);
       } catch (error) {
         console.error("CE.SDK initialization error:", error);
         isInitialized.current = false;
@@ -152,7 +152,7 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
 
     async function createVideoSceneWithImages(cesdk: CreativeEditorSDK) {
   try {
-    if (memoizedImageUrls.length < 2) {
+    if (imageUrls.length < 2) {
       throw new Error("At least two image URLs are required to create two scenes.");
     }
 
@@ -164,7 +164,7 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
     }
     const block1 = cesdk.engine.block.create("//ly.img.ubq/graphic");
     const fill1 = cesdk.engine.block.createFill("//ly.img.ubq/fill/image");
-    cesdk.engine.block.setString(fill1, "fill/image/imageFileURI", memoizedImageUrls[0]);
+    cesdk.engine.block.setString(fill1, "fill/image/imageFileURI", imageUrls[0]);
     cesdk.engine.block.setFill(block1, fill1);
     cesdk.engine.block.appendChild(page1, block1);
     cesdk.engine.block.setDouble(block1, "playback/timeOffset", 0);
@@ -185,7 +185,7 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
     }
     const block2 = cesdk.engine.block.create("//ly.img.ubq/graphic");
     const fill2 = cesdk.engine.block.createFill("//ly.img.ubq/fill/image");
-    cesdk.engine.block.setString(fill2, "fill/image/imageFileURI", memoizedImageUrls[1]);
+    cesdk.engine.block.setString(fill2, "fill/image/imageFileURI", imageUrls[1]);
     cesdk.engine.block.setFill(block2, fill2);
     cesdk.engine.block.appendChild(page2, block2);
     cesdk.engine.block.setDouble(block2, "playback/timeOffset", 0);
@@ -233,7 +233,7 @@ const CreativeEditorSDKComponent: React.FC<CreativeEditorSDKComponentProps> = ({
         isInitialized.current = false;
       }
     };
-  }, [memoizedImageUrls]);
+  }, []);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!cesdk || !event.target.files || event.target.files.length === 0) {

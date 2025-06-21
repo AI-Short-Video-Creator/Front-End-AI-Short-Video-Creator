@@ -84,10 +84,6 @@ export function VideoCard({
                             <Share2 className="mr-2 h-4 w-4" />
                             <span>Share</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={onDownload}>
-                            <Download className="mr-2 h-4 w-4" />
-                            <span>Download</span>
-                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                             <Trash2 className="mr-2 h-4 w-4" />

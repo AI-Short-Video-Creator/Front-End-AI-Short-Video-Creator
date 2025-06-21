@@ -16,12 +16,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { ShareVideoPreview } from "@/components/share/share-video-preview"
 import { Facebook, Youtube, Music } from "lucide-react"
 import { toast } from "sonner"
+import { postVideoToPage } from "@/lib/facebook-insights";
+import { uploadVideoToYouTubeViaBackend } from "@/lib/youtube-insights";
+const API_CAPTION_URL = import.meta.env.VITE_API_CAPTION_URL as string;
 
 interface ShareVideoDialogProps {
   video: {
     id: string;
     title: string
     thumbnail?: string
+    videoUrl?: string
   }
   connections: {
     facebook: boolean
@@ -56,14 +60,60 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
     setPlatforms((prev) => ({ ...prev, [platform]: checked }))
   }
 
-  const handleQuickShare = () => {
-    onConfirmShare(video.id, platforms)
+  const handleQuickShare = async () => {
+    // Gọi callback cũ nếu muốn giữ logic cũ
+    onConfirmShare(video.id, platforms);
+
+    // Chia sẻ lên Facebook nếu được chọn
+    if (platforms.facebook) {
+      try {
+        // Giả sử video có trường videoUrl (bạn cần truyền vào prop video)
+        if (!video.videoUrl) {
+          toast.error("No video URL found for sharing to Facebook.");
+          return;
+        }
+        await postVideoToPage(video.videoUrl, title, description);
+        toast.success("Video shared to Facebook page successfully!");
+      } catch (err: any) {
+        toast.error("Failed to share video to Facebook page.");
+        console.error("Facebook share error:", err);
+      }
+    }
+
+    if (platforms.youtube) {
+      try {
+        // Giả sử video có trường videoUrl (bạn cần truyền vào prop video)
+        if (!video.videoUrl) {
+          toast.error("No video URL found for sharing to Youtube.");
+          return;
+        }
+        await  uploadVideoToYouTubeViaBackend(video.videoUrl, title, description, video.thumbnail);
+        toast.success("Video shared to Youtube channel successfully!");
+      } catch (err: any) {
+        toast.error("Failed to share video to Youtube channel.");
+        console.error("Youtube share error:", err);
+      }
+    }
   }
 
-  const handleAutoCaption = () => {
-    console.log("Generating auto captions...")
-    setDescription("This is an auto-generated description for the video.")
-    toast.info("Auto captions generated.")
+  const handleAutoCaption = async () => {
+    try {
+      // Chuyển sang dùng phương thức GET với query parameter
+      const url = `${API_CAPTION_URL}?video_context=${encodeURIComponent(title)}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to fetch caption");
+      const data = await res.json();
+      console.log(data);
+      if (data.title) setTitle(data.title); // Cập nhật title mới
+      if (data.caption) setDescription(data.caption);
+      toast.success("Auto captions generated.");
+    } catch (err) {
+      toast.error("Auto caption error.");
+      console.error("Auto caption error:", err);
+    }
   }
 
   return (

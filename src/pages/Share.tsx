@@ -16,9 +16,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { connectToFacebook } from "@/lib/oauth-flow";
+import { connectToFacebook, connectToYouTube } from "@/lib/oauth-flow";
 import { fetchTotalVideoViewsForPage } from "@/lib/facebook-insights";
-import { ChartNoAxesColumnDecreasingIcon } from "lucide-react";
+import { fetchTotalYouTubeViewsByOwnerChannel } from "@/lib/youtube-insights";
 
 // Replace the mock video links with your real video links here.
 // Example:
@@ -26,7 +26,7 @@ const initialMockVideos = [
   {
     id: 'vid1',
     title: 'My Awesome First Video',
-    thumbnail: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+    thumbnail: 'https://images.pexels.com/photos/799137/pexels-photo-799137.jpeg',
     date: 'Jun 10, 2025',
     sharedOn: { facebook: true, youtube: false, tiktok: false },
     videoUrl: 'https://res.cloudinary.com/create-video-ai/video/upload/v1749640312/user_videos/videos/video_2aab1596-7c29-4b0a-859b-1831b577725d.mp4'
@@ -59,6 +59,7 @@ const initialMockVideos = [
 
 export default function Share() {
   const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
+  const YOUTUBE_APP_ID = import.meta.env.VITE_YOUTUBE_APP_ID;
 
   const [connections, setConnections] = React.useState({
     facebook: false,
@@ -68,18 +69,16 @@ export default function Share() {
 
   const [facebookProfile, setFacebookProfile] = React.useState<{ name: string; avatar: string } | null>(null);
   const [facebookTotalViews, setFacebookTotalViews] = React.useState<number | null>(null);
+  const [youtubeProfile, setYoutubeProfile] = React.useState<{ name: string; avatar: string } | null>(null);
+  const [youtubeTotalViews, setYoutubeTotalViews] = React.useState<number | null>(null);
 
   const TotalViews = {
     facebook: 0,
-    youtube: 67890,
+    youtube: 0,
     tiktok: 102345,
   }
 
   const userProfiles = {
-    youtube: {
-      name: 'Jane Doe',
-      avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026705d'
-    },
     tiktok: {
       name: 'Alex Lee',
       avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026706d'
@@ -95,11 +94,23 @@ export default function Share() {
     const fbToken = localStorage.getItem("fb_access_token");
     const fbName = localStorage.getItem("fb_user_name");
     const fbAvatar = localStorage.getItem("fb_user_avatar");
+
+    const ytToken = localStorage.getItem("yt_access_token");
+    const ytName = localStorage.getItem("yt_user_name");
+    const ytAvatar = localStorage.getItem("yt_user_avatar");
+
     if (fbToken && fbName && fbAvatar) {
       setConnections((prev) => ({ ...prev, facebook: true }));
       setFacebookProfile({ name: fbName, avatar: fbAvatar });
       fetchTotalVideoViewsForPage().then(setFacebookTotalViews).catch(() => setFacebookTotalViews(0));
       console.log("TotalViews: ", facebookTotalViews);
+    }
+
+    if (ytToken && ytName && ytAvatar) {
+      setConnections((prev) => ({ ...prev, youtube: true }));
+      setYoutubeProfile({ name: ytName, avatar: ytAvatar });
+      fetchTotalYouTubeViewsByOwnerChannel("QuickClip Creator").then(setYoutubeTotalViews).catch(() => setYoutubeTotalViews(0));
+      console.log("youtubeTotalViews: ", youtubeTotalViews);
     }
   }, []);
 
@@ -108,6 +119,12 @@ export default function Share() {
       console.log("TotalViews: ", facebookTotalViews);
     }
   }, [facebookTotalViews]);
+
+  React.useEffect(() => {
+    if (youtubeTotalViews !== null) {
+      console.log("youtubeTotalViews: ", youtubeTotalViews);
+    }
+  }, [youtubeTotalViews]);
 
   const handleShareClick = (video: (typeof videos)[0]) => {
     setSelectedVideo(video);
@@ -144,6 +161,14 @@ export default function Share() {
     });
   };
 
+  const handleConnectYoutube = () => {
+    connectToYouTube(YOUTUBE_APP_ID, (user) => {
+      setConnections((prev) => ({ ...prev, youtube: true }));
+      setYoutubeProfile({ name: user.name, avatar: user.avatar });
+      toast.success(`Connected to Youtube as ${user.name}`);
+    });
+  };
+
   const handleDisconnect = (platform: string) => {
     setConnections((prev) => ({ ...prev, [platform]: false }));
     if (platform === "facebook") {
@@ -152,7 +177,12 @@ export default function Share() {
       localStorage.removeItem("fb_user_name");
       localStorage.removeItem("fb_user_avatar");
     }
-    // Xử lý cho các nền tảng khác nếu cần
+    if (platform === "youtube") {
+      setYoutubeProfile(null);
+      localStorage.removeItem("yt_access_token");
+      localStorage.removeItem("yt_user_name");
+      localStorage.removeItem("yt_user_avatar");
+    }
   };
 
   const handleConfirmShare = (videoId: string, sharedPlatforms: { [key: string]: boolean }) => {
@@ -171,7 +201,6 @@ export default function Share() {
       })
     );
     setDialogOpen(false);
-    toast.success("Video shared successfully!");
   };
 
   return (
@@ -214,12 +243,12 @@ export default function Share() {
                   />
                 )}
                 isConnected={connections.youtube}
-                onConnect={() => handleConnect("youtube")}
+                onConnect={handleConnectYoutube}
                 onDisconnect={() => handleDisconnect("youtube")}
                 iconColorClassName=""
-                views={TotalViews.youtube}
-                userName={connections.youtube ? userProfiles.youtube.name : undefined}
-                userAvatar={connections.youtube ? userProfiles.youtube.avatar : undefined}
+                views={connections.youtube ? youtubeTotalViews ?? undefined : undefined}
+                userName={connections.youtube && youtubeProfile ? youtubeProfile.name : undefined}
+                userAvatar={connections.youtube && youtubeProfile ? youtubeProfile.avatar : undefined}
               />
               <PlatformConnectCard
                 platformName="TikTok"

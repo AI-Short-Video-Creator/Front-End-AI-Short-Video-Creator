@@ -4,7 +4,7 @@ export function connectToFacebook(clientId: string, onSuccess: (user: { name: st
     return;
   }
   const redirectUri = encodeURIComponent(window.location.href);
-  const authUrl = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts`;
+  const authUrl = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts,pages_read_user_content,read_insights`;
 
   const width = 700, height = 700;
   const left = window.screenX + (window.outerWidth - width) / 2;
@@ -72,44 +72,83 @@ export function connectToFacebook(clientId: string, onSuccess: (user: { name: st
   }, 500);
 }
 
-export async function fetchTotalVideoViewsForPage(): Promise<number> {
-  const accessToken = localStorage.getItem("fb_access_token");
-  if (!accessToken) {
-    throw new Error("Access token not found. Please log in first.");
+export function connectToYouTube(clientId: string, onSuccess: (user: { name: string, avatar: string }) => void) {
+  if (!clientId) {
+    alert("Google Client ID is missing");
+    return;
+  }
+  const redirectUri = encodeURIComponent(window.location.href);
+  const scope = [
+    "https://www.googleapis.com/auth/youtube.readonly",
+    "profile",
+    "email"
+  ].join(" ");
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${encodeURIComponent(scope)}`;
+
+  const width = 700, height = 700;
+  const left = window.screenX + (window.outerWidth - width) / 2;
+  const top = window.screenY + (window.outerHeight - height) / 5;
+
+  const popup = window.open(
+    authUrl,
+    "YouTube Login",
+    `width=${width},height=${height},left=${left},top=${top}`
+  );
+
+  if (!popup) {
+    alert("Popup blocked. Please allow it in your browser.");
+    return;
   }
 
-  // 1. Lấy danh sách các Page user đang quản lý
-  const pagesRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`);
-  const pagesData = await pagesRes.json();
-  const targetPage = pagesData.data.find((page: any) => page.name === "Create AI Video");
+  const interval = setInterval(() => {
+    try {
+      if (!popup || popup.closed) {
+        clearInterval(interval);
+        return;
+      }
 
-  if (!targetPage) {
-    throw new Error("Page 'Create AI Video' not found in your managed pages.");
-  }
+      const url = popup.location.href;
+      const hash = popup.location.hash;
+      const search = popup.location.search;
 
-  const pageAccessToken = targetPage.access_token;
-  const pageId = targetPage.id;
+      // Khi popup đã redirect về redirect_uri
+      if (url.startsWith(window.location.origin)) {
+        const params = new URLSearchParams(hash.substring(1) || search);
 
-  let totalViews = 0;
-  let next = `https://graph.facebook.com/v18.0/${pageId}/posts?fields=id,message,created_time,attachments{media_type,media},insights.metric(total_video_impressions,total_video_views)&limit=25&access_token=${pageAccessToken}`;
+        if (params.get("error")) {
+          console.warn("User denied permissions.");
+          popup.close();
+          clearInterval(interval);
+          return;
+        }
 
-  // 2. Lặp qua các post có video và cộng tổng lượt xem
-  while (next) {
-    const res = await fetch(next);
-    const data = await res.json();
+        if (params.get("access_token")) {
+          const accessToken = params.get("access_token")!;
+          popup.close();
+          clearInterval(interval);
 
-    for (const post of data.data) {
-      const isVideoPost = post.attachments?.data?.some((a: any) => a.media_type === "video");
-      if (isVideoPost && post.insights) {
-        const viewsMetric = post.insights.data.find((m: any) => m.name === "total_video_views");
-        if (viewsMetric) {
-          totalViews += parseInt(viewsMetric.values?.[0]?.value || "0");
+          // Lấy thông tin user từ Google People API
+          fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`)
+            .then(res => res.json())
+            .then(data => {
+              // Save to localStorage
+              localStorage.setItem("yt_access_token", accessToken);
+              localStorage.setItem("yt_user_name", data.name);
+              localStorage.setItem("yt_user_avatar", data.picture || "");
+
+              onSuccess({
+                name: data.name,
+                avatar: data.picture || ""
+              });
+            })
+            .catch(err => {
+              console.error("Error fetching YouTube user data:", err);
+            });
         }
       }
+    } catch (e) {
+      // Ignore cross-origin errors until popup is on same origin
     }
-
-    next = data.paging?.next || null;
-  }
-
-  return totalViews;
+  }, 500);
 }
+

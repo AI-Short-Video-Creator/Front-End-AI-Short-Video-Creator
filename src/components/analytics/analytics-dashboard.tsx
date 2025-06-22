@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart } from "recharts"
 import { fetchMonthlyVideoStatsForPage, fetchVideoDetailStatsForPage } from "@/lib/facebook-insights";
+import { fetchMonthlyTiktokVideoStats, fetchTiktokVideoDetailStats } from "@/lib/tiktok-insights";
 import { endOfYear, startOfYear } from "date-fns";
 
 import { Button } from "@/components/ui/button"
@@ -63,9 +64,13 @@ export function AnalyticsDashboard() {
                 from: defaultFrom,
                 to: defaultTo,
         });
-        const [chartData, setChartData] = React.useState<any[]>([]);
-        const [videoTableData, setVideoTableData] = React.useState<any[]>([]);
-        const [loading, setLoading] = React.useState(false);
+        const [fbChartData, setFbChartData] = React.useState<any[]>([]);
+        const [fbVideoTableData, setFbVideoTableData] = React.useState<any[]>([]);
+        const [fbLoading, setFbLoading] = React.useState(false);
+
+        const [ttChartData, setTtChartData] = React.useState<any[]>([]);
+        const [ttVideoTableData, setTtVideoTableData] = React.useState<any[]>([]);
+        const [ttLoading, setTtLoading] = React.useState(false);
 
         // Kiểm tra range không quá 93 ngày
         const handleDateChange = (range: DateRange | undefined) => {
@@ -88,7 +93,7 @@ export function AnalyticsDashboard() {
         // Fetch Facebook stats khi date thay đổi hoặc khi vào tab Facebook
         React.useEffect(() => {
                 if (!date?.from || !date?.to) return;
-                setLoading(true);
+                setFbLoading(true);
                 Promise.all([
                         fetchMonthlyVideoStatsForPage(
                                 date.from.toISOString().slice(0, 10),
@@ -100,12 +105,43 @@ export function AnalyticsDashboard() {
                         ),
                 ])
                         .then(([monthly, detail]) => {
-                                setChartData(monthly);
-                                setVideoTableData(detail);
+                                setFbChartData(monthly);
+                                setFbVideoTableData(detail);
                         })
-                        .finally(() => setLoading(false));
+                        .finally(() => setFbLoading(false));
         }, [date]);
-
+        // Fetch TikTok stats when date changes or TikTok tab is selected
+        React.useEffect(() => {
+                if (!date?.from || !date?.to) return;
+                // Listen for tab change to TikTok
+                const tabList = document.querySelector('[role="tablist"]');
+                if (!tabList) return;
+                const handleTabChange = () => {
+                        const activeTab = (tabList.querySelector('[aria-selected="true"]') as HTMLElement)?.textContent;
+                        if (activeTab === "TikTok") {
+                                setTtLoading(true);
+                                Promise.all([
+                                        fetchMonthlyTiktokVideoStats(
+                                                date.from!.toISOString().slice(0, 10),
+                                                date.to!.toISOString().slice(0, 10)
+                                        ),
+                                        fetchTiktokVideoDetailStats(
+                                                date.from!.toISOString().slice(0, 10),
+                                                date.to!.toISOString().slice(0, 10)
+                                        )
+                                ])
+                                .then(([monthlyStats, detail]) => {
+                                        setTtChartData(monthlyStats);
+                                        setTtVideoTableData(detail); // hoặc fetch thêm detail nếu muốn
+                                })
+                                .finally(() => setTtLoading(false));
+                        }
+                };
+                tabList.addEventListener("click", handleTabChange);
+                return () => {
+                        tabList.removeEventListener("click", handleTabChange);
+                };
+        }, [date]);
         return (
                 <Tabs defaultValue="facebook">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
@@ -163,16 +199,18 @@ export function AnalyticsDashboard() {
                         <TabsContent value="facebook">
                                 <AnalyticsTabContent
                                         platform="Facebook"
-                                        chartData={chartData}
-                                        videoTableData={videoTableData}
-                                        loading={loading}
+                                        chartData={fbChartData}
+                                        videoTableData={fbVideoTableData}
+                                        loading={fbLoading}
                                 />
                         </TabsContent>
                         <TabsContent value="youtube">
-                                <AnalyticsTabContent platform="YouTube" chartData={chartData} loading={loading} />
+                                <AnalyticsTabContent platform="YouTube" chartData={fbChartData} 
+                                        videoTableData={fbVideoTableData} loading={fbLoading} />
                         </TabsContent>
                         <TabsContent value="tiktok">
-                                <AnalyticsTabContent platform="TikTok" chartData={chartData} loading={loading} />
+                                <AnalyticsTabContent platform="TikTok" chartData={ttChartData} 
+                                        videoTableData={ttVideoTableData} loading={ttLoading} />
                         </TabsContent>
                 </Tabs>
         )

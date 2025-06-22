@@ -16,9 +16,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { connectToFacebook, connectToYouTube } from "@/lib/oauth-flow";
+import { connectToFacebook, connectToYouTube, connectToTiktok } from "@/lib/oauth-flow";
 import { fetchTotalVideoViewsForPage } from "@/lib/facebook-insights";
 import { fetchTotalYouTubeViewsByOwnerChannel } from "@/lib/youtube-insights";
+import { fetchTotalTiktokViews } from "@/lib/tiktok-insights";
 
 // Replace the mock video links with your real video links here.
 // Example:
@@ -60,6 +61,7 @@ const initialMockVideos = [
 export default function Share() {
   const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
   const YOUTUBE_APP_ID = import.meta.env.VITE_YOUTUBE_APP_ID;
+  const TIKTOK_CLIENT_KEY = import.meta.env.VITE_TIKTOK_CLIENT_KEY;
 
   const [connections, setConnections] = React.useState({
     facebook: false,
@@ -71,19 +73,14 @@ export default function Share() {
   const [facebookTotalViews, setFacebookTotalViews] = React.useState<number | null>(null);
   const [youtubeProfile, setYoutubeProfile] = React.useState<{ name: string; avatar: string } | null>(null);
   const [youtubeTotalViews, setYoutubeTotalViews] = React.useState<number | null>(null);
+  const [tiktokProfile, setTiktokProfile] = React.useState<{ name: string; avatar: string } | null>(null);
+  const [tiktokTotalViews, setTiktokTotalViews] = React.useState<number | null>(null);
 
   const TotalViews = {
     facebook: 0,
     youtube: 0,
-    tiktok: 102345,
+    tiktok: 0,
   }
-
-  const userProfiles = {
-    tiktok: {
-      name: 'Alex Lee',
-      avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026706d'
-    }
-  };
 
   const [videos, setVideos] = React.useState(initialMockVideos);
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -99,6 +96,19 @@ export default function Share() {
     const ytName = localStorage.getItem("yt_user_name");
     const ytAvatar = localStorage.getItem("yt_user_avatar");
 
+    const tkToken = localStorage.getItem("tt_access_token");
+    const tkName = localStorage.getItem("tt_user_name");
+    const tkAvatar = localStorage.getItem("tt_user_avatar");
+
+    if (tkToken && tkName && tkAvatar) {
+      setConnections((prev) => ({ ...prev, tiktok: true }));
+      setTiktokProfile({ name: tkName, avatar: tkAvatar });
+      fetchTotalTiktokViews()
+        .then((result) => setTiktokTotalViews(result.totalViews))
+        .catch(() => setTiktokTotalViews(0));
+      console.log("tiktokTotalViews: ", tiktokTotalViews);
+    }
+
     if (fbToken && fbName && fbAvatar) {
       setConnections((prev) => ({ ...prev, facebook: true }));
       setFacebookProfile({ name: fbName, avatar: fbAvatar });
@@ -109,7 +119,7 @@ export default function Share() {
     if (ytToken && ytName && ytAvatar) {
       setConnections((prev) => ({ ...prev, youtube: true }));
       setYoutubeProfile({ name: ytName, avatar: ytAvatar });
-      fetchTotalYouTubeViewsByOwnerChannel("QuickClip Creator").then(setYoutubeTotalViews).catch(() => setYoutubeTotalViews(0));
+      //fetchTotalYouTubeViewsByOwnerChannel("QuickClip Creator").then(setYoutubeTotalViews).catch(() => setYoutubeTotalViews(0));
       console.log("youtubeTotalViews: ", youtubeTotalViews);
     }
   }, []);
@@ -123,6 +133,12 @@ export default function Share() {
   React.useEffect(() => {
     if (youtubeTotalViews !== null) {
       console.log("youtubeTotalViews: ", youtubeTotalViews);
+    }
+  }, [youtubeTotalViews]);
+
+  React.useEffect(() => {
+    if (tiktokTotalViews !== null) {
+      console.log("tiktokTotalViews: ", tiktokTotalViews);
     }
   }, [youtubeTotalViews]);
 
@@ -169,6 +185,14 @@ export default function Share() {
     });
   };
 
+  const handleConnectTiktok = () => {
+    connectToTiktok(TIKTOK_CLIENT_KEY, (user) => {
+      setConnections((prev) => ({ ...prev, tiktok: true }));
+      setTiktokProfile({ name: user.name, avatar: user.avatar });
+      toast.success(`Connected to TikTok as ${user.name}`);
+    });
+  };
+
   const handleDisconnect = (platform: string) => {
     setConnections((prev) => ({ ...prev, [platform]: false }));
     if (platform === "facebook") {
@@ -182,6 +206,13 @@ export default function Share() {
       localStorage.removeItem("yt_access_token");
       localStorage.removeItem("yt_user_name");
       localStorage.removeItem("yt_user_avatar");
+    }
+
+    if (platform === "tiktok") {
+      setTiktokProfile(null);
+      localStorage.removeItem("tt_access_token");
+      localStorage.removeItem("tt_user_name");
+      localStorage.removeItem("tt_user_avatar");
     }
   };
 
@@ -260,12 +291,12 @@ export default function Share() {
                   />
                 )}
                 isConnected={connections.tiktok}
-                onConnect={() => handleConnect("tiktok")}
+                onConnect={handleConnectTiktok}
                 onDisconnect={() => handleDisconnect("tiktok")}
                 iconColorClassName=""
-                views={connections.tiktok ? TotalViews.tiktok : undefined}
-                userName={connections.tiktok ? userProfiles.tiktok.name : undefined}
-                userAvatar={connections.tiktok ? userProfiles.tiktok.avatar : undefined}
+                views={connections.tiktok ? tiktokTotalViews ?? undefined : undefined}
+                userName={connections.tiktok && tiktokProfile ? tiktokProfile.name : undefined}
+                userAvatar={connections.tiktok && tiktokProfile ? tiktokProfile.avatar : undefined}
               />
             </div>
           </CardContent>

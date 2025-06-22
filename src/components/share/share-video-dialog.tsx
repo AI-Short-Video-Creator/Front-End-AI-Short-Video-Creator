@@ -18,6 +18,7 @@ import { Facebook, Youtube, Music } from "lucide-react"
 import { toast } from "sonner"
 import { postVideoToPage } from "@/lib/facebook-insights";
 import { uploadVideoToYouTubeViaBackend } from "@/lib/youtube-insights";
+import { uploadVideoToTiktokByUrl } from "@/lib/tiktok-insights";
 const API_CAPTION_URL = import.meta.env.VITE_API_CAPTION_URL as string;
 
 interface ShareVideoDialogProps {
@@ -87,11 +88,24 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
           toast.error("No video URL found for sharing to Youtube.");
           return;
         }
-        await  uploadVideoToYouTubeViaBackend(video.videoUrl, title, description, video.thumbnail);
+        await uploadVideoToYouTubeViaBackend(video.videoUrl, title, description, video.thumbnail);
         toast.success("Video shared to Youtube channel successfully!");
       } catch (err: any) {
         toast.error("Failed to share video to Youtube channel.");
         console.error("Youtube share error:", err);
+      }
+    }
+    if (platforms.tiktok) {
+      try {
+        if (!video.videoUrl) {
+          toast.error("No video URL found for sharing to TikTok.");
+          return;
+        }
+        await uploadVideoToTiktokByUrl(video.videoUrl, title, description);
+        toast.success("Video shared to TikTok successfully!");
+      } catch (err: any) {
+        toast.error("Failed to share video to TikTok.");
+        console.error("TikTok share error:", err);
       }
     }
   }

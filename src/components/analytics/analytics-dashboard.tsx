@@ -2,7 +2,8 @@ import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart } from "recharts"
 import { fetchMonthlyVideoStatsForPage, fetchVideoDetailStatsForPage } from "@/lib/facebook-insights";
 import { fetchMonthlyTiktokVideoStats, fetchTiktokVideoDetailStats } from "@/lib/tiktok-insights";
-import { endOfYear, startOfYear } from "date-fns";
+import { fetchMonthlyYouTubeVideoStats, fetchYouTubeVideoDetailStats } from "@/lib/youtube-insights";
+import { endOfYear, startOfYear, addDays, format, endOfDay, startOfDay } from "date-fns";
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -44,7 +45,6 @@ import {
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Calendar as CalendarIcon, RefreshCw } from "lucide-react"
 import { DateRange } from "react-day-picker"
-import { addDays, format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"; // Thêm dòng này nếu bạn dùng hệ thống toast
 
@@ -72,6 +72,12 @@ export function AnalyticsDashboard() {
         const [ttVideoTableData, setTtVideoTableData] = React.useState<any[]>([]);
         const [ttLoading, setTtLoading] = React.useState(false);
 
+        const [ytChartData, setYtChartData] = React.useState<any[]>([]);
+        const [ytVideoTableData, setYtVideoTableData] = React.useState<any[]>([]);
+        const [ytLoading, setYtLoading] = React.useState(false);
+
+        const CHANNEL_NAME = import.meta.env.VITE_YOUTUBE_CHANNEL;
+
         // Kiểm tra range không quá 93 ngày
         const handleDateChange = (range: DateRange | undefined) => {
                 if (!range?.from || !range?.to) {
@@ -90,18 +96,18 @@ export function AnalyticsDashboard() {
                 setDate(range);
         };
 
-        // Fetch Facebook stats khi date thay đổi hoặc khi vào tab Facebook
+        // Fetch Facebook stats when date changes
         React.useEffect(() => {
                 if (!date?.from || !date?.to) return;
                 setFbLoading(true);
                 Promise.all([
                         fetchMonthlyVideoStatsForPage(
-                                date.from.toISOString().slice(0, 10),
-                                date.to.toISOString().slice(0, 10)
+                                format(startOfDay(date.from), "yyyy-MM-dd"),
+                                format(endOfDay(date.to), "yyyy-MM-dd")
                         ),
                         fetchVideoDetailStatsForPage(
-                                date.from.toISOString().slice(0, 10),
-                                date.to.toISOString().slice(0, 10)
+                                format(startOfDay(date.from), "yyyy-MM-dd"),
+                                format(endOfDay(date.to), "yyyy-MM-dd")
                         ),
                 ])
                         .then(([monthly, detail]) => {
@@ -110,37 +116,49 @@ export function AnalyticsDashboard() {
                         })
                         .finally(() => setFbLoading(false));
         }, [date]);
-        // Fetch TikTok stats when date changes or TikTok tab is selected
+
+        // Fetch TikTok stats when date changes
         React.useEffect(() => {
                 if (!date?.from || !date?.to) return;
-                // Listen for tab change to TikTok
-                const tabList = document.querySelector('[role="tablist"]');
-                if (!tabList) return;
-                const handleTabChange = () => {
-                        const activeTab = (tabList.querySelector('[aria-selected="true"]') as HTMLElement)?.textContent;
-                        if (activeTab === "TikTok") {
-                                setTtLoading(true);
-                                Promise.all([
-                                        fetchMonthlyTiktokVideoStats(
-                                                date.from!.toISOString().slice(0, 10),
-                                                date.to!.toISOString().slice(0, 10)
-                                        ),
-                                        fetchTiktokVideoDetailStats(
-                                                date.from!.toISOString().slice(0, 10),
-                                                date.to!.toISOString().slice(0, 10)
-                                        )
-                                ])
-                                .then(([monthlyStats, detail]) => {
-                                        setTtChartData(monthlyStats);
-                                        setTtVideoTableData(detail); // hoặc fetch thêm detail nếu muốn
-                                })
-                                .finally(() => setTtLoading(false));
-                        }
-                };
-                tabList.addEventListener("click", handleTabChange);
-                return () => {
-                        tabList.removeEventListener("click", handleTabChange);
-                };
+                setTtLoading(true);
+                Promise.all([
+                        fetchMonthlyTiktokVideoStats(
+                                format(startOfDay(date.from), "yyyy-MM-dd"),
+                                format(endOfDay(date.to), "yyyy-MM-dd")
+                        ),
+                        fetchTiktokVideoDetailStats(
+                                format(startOfDay(date.from), "yyyy-MM-dd"),
+                                format(endOfDay(date.to), "yyyy-MM-dd")
+                        )
+                ])
+                        .then(([monthlyStats, detail]) => {
+                                setTtChartData(monthlyStats);
+                                setTtVideoTableData(detail);
+                        })
+                        .finally(() => setTtLoading(false));
+        }, [date]);
+
+        // Fetch YouTube stats when date changes
+        React.useEffect(() => {
+                if (!date?.from || !date?.to) return;
+                setYtLoading(true);
+                Promise.all([
+                        fetchMonthlyYouTubeVideoStats(
+                                format(startOfDay(date.from), "yyyy-MM-dd"),
+                                format(endOfDay(date.to), "yyyy-MM-dd"),
+                                CHANNEL_NAME
+                        ),
+                        fetchYouTubeVideoDetailStats(
+                                format(startOfDay(date.from), "yyyy-MM-dd"),
+                                format(endOfDay(date.to), "yyyy-MM-dd"),
+                                CHANNEL_NAME
+                        )
+                ])
+                        .then(([monthlyStats, detail]) => {
+                                setYtChartData(monthlyStats);
+                                setYtVideoTableData(detail);
+                        })
+                        .finally(() => setYtLoading(false));
         }, [date]);
         return (
                 <Tabs defaultValue="facebook">
@@ -205,11 +223,11 @@ export function AnalyticsDashboard() {
                                 />
                         </TabsContent>
                         <TabsContent value="youtube">
-                                <AnalyticsTabContent platform="YouTube" chartData={fbChartData} 
-                                        videoTableData={fbVideoTableData} loading={fbLoading} />
+                                <AnalyticsTabContent platform="YouTube" chartData={ytChartData}
+                                        videoTableData={ytVideoTableData} loading={ytLoading} />
                         </TabsContent>
                         <TabsContent value="tiktok">
-                                <AnalyticsTabContent platform="TikTok" chartData={ttChartData} 
+                                <AnalyticsTabContent platform="TikTok" chartData={ttChartData}
                                         videoTableData={ttVideoTableData} loading={ttLoading} />
                         </TabsContent>
                 </Tabs>
@@ -230,6 +248,14 @@ const AnalyticsTabContent = ({
         const [metric, setMetric] = React.useState("views");
         const [chartType, setChartType] = React.useState("bar");
 
+        // Pagination state
+        const [page, setPage] = React.useState(1);
+        const [rowsPerPage, setRowsPerPage] = React.useState(5);
+
+        const totalRows = videoTableData.length;
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        const pagedData = videoTableData.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+
         const platformColors: { [key: string]: string } = {
                 Facebook: "#2563eb", // Blue
                 YouTube: "hsl(var(--destructive))", // Red
@@ -240,7 +266,7 @@ const AnalyticsTabContent = ({
                 views: "Views",
                 likes: "Likes",
                 comments: "Comments",
-                shares: "Shares",
+                ...(platform !== "YouTube" && { shares: "Shares" }),
         };
 
         const chartConfig = {
@@ -269,7 +295,9 @@ const AnalyticsTabContent = ({
                                                                 <SelectItem value="views">Views</SelectItem>
                                                                 <SelectItem value="likes">Likes</SelectItem>
                                                                 <SelectItem value="comments">Comments</SelectItem>
-                                                                <SelectItem value="shares">Shares</SelectItem>
+                                                                {platform !== "YouTube" && (
+                                                                        <SelectItem value="shares">Shares</SelectItem>
+                                                                )}
                                                         </SelectContent>
                                                 </Select>
                                                 <RadioGroup defaultValue="bar" value={chartType} onValueChange={setChartType} className="flex items-center space-x-4">
@@ -328,6 +356,42 @@ const AnalyticsTabContent = ({
                                         </CardDescription>
                                 </CardHeader>
                                 <CardContent>
+                                        <div className="flex items-center justify-between mb-2">
+                                                <div>
+                                                        <label className="mr-2 text-sm">Rows per page:</label>
+                                                        <select
+                                                                value={rowsPerPage}
+                                                                onChange={e => {
+                                                                        setRowsPerPage(Number(e.target.value));
+                                                                        setPage(1);
+                                                                }}
+                                                                className="border rounded px-2 py-1 text-sm bg-black text-white"
+                                                        >
+                                                                <option value={5}>5</option>
+                                                                <option value={10}>10</option>
+                                                                <option value={20}>20</option>
+                                                        </select>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                        <button
+                                                                className="px-2 py-1 border rounded disabled:opacity-50"
+                                                                onClick={() => setPage(page - 1)}
+                                                                disabled={page === 1}
+                                                        >
+                                                                Prev
+                                                        </button>
+                                                        <span className="text-sm">
+                                                                Page {page} of {totalPages || 1}
+                                                        </span>
+                                                        <button
+                                                                className="px-2 py-1 border rounded disabled:opacity-50"
+                                                                onClick={() => setPage(page + 1)}
+                                                                disabled={page === totalPages || totalPages === 0}
+                                                        >
+                                                                Next
+                                                        </button>
+                                                </div>
+                                        </div>
                                         <Table>
                                                 <TableHeader>
                                                         <TableRow>
@@ -336,11 +400,13 @@ const AnalyticsTabContent = ({
                                                                 <TableHead className="text-right">Views</TableHead>
                                                                 <TableHead className="text-right">Likes</TableHead>
                                                                 <TableHead className="text-right">Comments</TableHead>
-                                                                <TableHead className="text-right">Shares</TableHead>
+                                                                {platform === "YouTube" ? null : (
+                                                                        <TableHead className="text-right">Shares</TableHead>
+                                                                )}
                                                         </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                        {videoTableData.map(video => (
+                                                        {pagedData.map(video => (
                                                                 <TableRow key={video.id}>
                                                                         <TableCell>
                                                                                 <img
@@ -353,7 +419,9 @@ const AnalyticsTabContent = ({
                                                                         <TableCell className="text-right">{video.views.toLocaleString()}</TableCell>
                                                                         <TableCell className="text-right">{video.likes.toLocaleString()}</TableCell>
                                                                         <TableCell className="text-right">{video.comments.toLocaleString()}</TableCell>
-                                                                        <TableCell className="text-right">{video.shares.toLocaleString()}</TableCell>
+                                                                        {platform === "YouTube" ? null : (
+                                                                                <TableCell className="text-right">{video.shares.toLocaleString()}</TableCell>
+                                                                        )}
                                                                 </TableRow>
                                                         ))}
                                                 </TableBody>

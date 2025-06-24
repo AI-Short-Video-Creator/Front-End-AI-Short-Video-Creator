@@ -25,6 +25,11 @@ interface VideoCardProps extends React.HTMLAttributes<HTMLDivElement> {
         youtube?: boolean;
         tiktok?: boolean;
     };
+    link?: {
+        facebook?: string;
+        youtube?: string;
+        tiktok?: string;
+    };
     onPlay?: () => void
     onDelete?: () => void
     onShare?: () => void
@@ -43,6 +48,7 @@ export function VideoCard({
     onAnalytics,
     onDownload,
     sharedOn,
+    link,
     videoUrl,
     className,
     ...props
@@ -99,12 +105,12 @@ export function VideoCard({
                     <div className="flex items-center gap-2 mt-2">
                         <span className="text-xs text-muted-foreground">Shared on:</span>
                         <div className="flex items-center gap-1.5">
-                            {sharedOn.facebook && (
+                            {sharedOn.facebook && link?.facebook && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <button
                                             type="button"
-                                            onClick={() => window.open(`https://www.facebook.com/`, "_blank")}
+                                            onClick={() => window.open(link.facebook, "_blank")}
                                             className="p-0 bg-transparent border-none flex items-center gap-1"
                                             aria-label="Open Facebook"
                                         >
@@ -115,7 +121,7 @@ export function VideoCard({
                                             />
                                             <img
                                                 src="/logos/insert_link.png"
-                                                alt="YouTube"
+                                                alt="Link"
                                                 className="h-4 w-4"
                                             />
                                         </button>
@@ -125,12 +131,12 @@ export function VideoCard({
                                     </TooltipContent>
                                 </Tooltip>
                             )}
-                            {sharedOn.youtube && (
+                            {sharedOn.youtube && link?.youtube && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <button
                                             type="button"
-                                            onClick={() => window.open(`https://www.youtube.com/`, "_blank")}
+                                            onClick={() => window.open(link.youtube, "_blank")}
                                             className="p-0 bg-transparent border-none flex items-center gap-1"
                                             aria-label="Open YouTube"
                                         >
@@ -141,7 +147,7 @@ export function VideoCard({
                                             />
                                             <img
                                                 src="/logos/insert_link.png"
-                                                alt="YouTube"
+                                                alt="Link"
                                                 className="h-4 w-4"
                                             />
                                         </button>
@@ -151,12 +157,12 @@ export function VideoCard({
                                     </TooltipContent>
                                 </Tooltip>
                             )}
-                            {sharedOn.tiktok && (
+                            {sharedOn.tiktok && link?.tiktok && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <button
                                             type="button"
-                                            onClick={() => window.open(`https://www.tiktok.com/`, "_blank")}
+                                            onClick={() => window.open(link.tiktok, "_blank")}
                                             className="p-0 bg-transparent border-none flex items-center gap-1"
                                             aria-label="Open TikTok"
                                         >
@@ -167,7 +173,7 @@ export function VideoCard({
                                             />
                                             <img
                                                 src="/logos/insert_link.png"
-                                                alt="YouTube"
+                                                alt="Link"
                                                 className="h-4 w-4"
                                             />
                                         </button>

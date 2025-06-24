@@ -1,5 +1,7 @@
 import { format } from "date-fns";
 
+const PAGE_NAME = import.meta.env.VITE_FACEBOOK_PAGE;
+
 export async function fetchTotalVideoViewsForPage(): Promise<number> {
   const accessToken = localStorage.getItem("fb_access_token");
   if (!accessToken) {
@@ -9,7 +11,7 @@ export async function fetchTotalVideoViewsForPage(): Promise<number> {
   // Lấy page access token và pageId như cũ
   const pagesRes = await fetch(`https://graph.facebook.com/v23.0/me/accounts?access_token=${accessToken}`);
   const pagesData = await pagesRes.json();
-  const targetPage = pagesData.data.find((page: any) => page.name === "Create AI Video");
+  const targetPage = pagesData.data.find((page: any) => page.name === PAGE_NAME);
   if (!targetPage) {
     throw new Error("Page 'Create AI Video' not found in your managed pages.");
   }
@@ -41,12 +43,12 @@ export async function fetchTotalVideoViewsForPage(): Promise<number> {
 }
 
 /**
- * Post a new video post to the Facebook page "Create AI Video"
+ * Post a new video post to the Facebook page PAGE_NAME
  * @param videoUrl - The public URL of the video file
  * @param title - The title of the post
  * @param caption - The caption/description of the post
  */
-export async function postVideoToPage(videoUrl: string, title: string, caption: string): Promise<any> {
+export async function postVideoToPage(videoUrl: string, title: string, caption: string): Promise<{ video_id: string; permalink_url?: string }> {
   const accessToken = localStorage.getItem("fb_access_token");
   if (!accessToken) {
     throw new Error("Access token not found. Please log in first.");
@@ -55,7 +57,7 @@ export async function postVideoToPage(videoUrl: string, title: string, caption: 
   // Get the page access token and page ID
   const pagesRes = await fetch(`https://graph.facebook.com/v23.0/me/accounts?access_token=${accessToken}`);
   const pagesData = await pagesRes.json();
-  const targetPage = pagesData.data.find((page: any) => page.name === "Create AI Video");
+  const targetPage = pagesData.data.find((page: any) => page.name === PAGE_NAME);
 
   if (!targetPage) {
     throw new Error("Page 'Create AI Video' not found in your managed pages.");
@@ -83,7 +85,21 @@ export async function postVideoToPage(videoUrl: string, title: string, caption: 
     throw new Error(uploadData.error?.message || "Failed to post video to Facebook page.");
   }
 
-  return uploadData; // contains video_id and other info
+  // Try to get the permalink_url using the returned video_id
+  let permalink_url: string | undefined = undefined;
+  if (uploadData.id) {
+    try {
+      const detailRes = await fetch(
+        `https://graph.facebook.com/v23.0/${uploadData.id}?fields=permalink_url&access_token=${pageAccessToken}`
+      );
+      const detailData = await detailRes.json();
+      permalink_url = "https://www.facebook.com" + detailData.permalink_url;
+    } catch {
+      // ignore error, just return video_id
+    }
+  }
+
+  return { video_id: uploadData.id, permalink_url };
 }
 
 /**
@@ -108,7 +124,7 @@ export async function fetchMonthlyVideoStatsForPage(
     `https://graph.facebook.com/v23.0/me/accounts?access_token=${accessToken}`
   );
   const pagesData = await pagesRes.json();
-  const targetPage = pagesData.data.find((page: any) => page.name === "Create AI Video");
+  const targetPage = pagesData.data.find((page: any) => page.name === PAGE_NAME);
   if (!targetPage) throw new Error("Page 'Create AI Video' not found in your managed pages.");
   const pageAccessToken = targetPage.access_token;
   const pageId = targetPage.id;
@@ -132,18 +148,22 @@ export async function fetchMonthlyVideoStatsForPage(
   const start = new Date(startTime);
   // Tăng endTime lên 2 ngày để bao phủ hết tháng cuối cùng
   var end = new Date(endTime);
+  console.log(start);
+  console.log(end);
   let current = new Date(start.getFullYear(), start.getMonth(), 1);
   while (current <= end) {
     const monthStr = format(current, "LLLL yyyy");
     result[monthStr] = { month: monthStr, views: 0, likes: 0, comments: 0, shares: 0 };
     current.setMonth(current.getMonth() + 1);
   }
-  
-  end = new Date(new Date(endTime).getTime() + 2 * 24 * 60 * 60 * 1000);
 
   for (const video of videos) {
     const created = new Date(video.created_time);
-    if (created < new Date(startTime) || created > new Date(end)) continue;
+    // Compare using start of day for startTime and end of day for endTime
+    const createdDate = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+    const startDate = new Date(new Date(startTime).getFullYear(), new Date(startTime).getMonth(), new Date(startTime).getDate());
+    const endDate = new Date(new Date(endTime).getFullYear(), new Date(endTime).getMonth(), new Date(endTime).getDate(), 23, 59, 59, 999);
+    if (createdDate < startDate || createdDate > endDate) continue;
     const month = format(created, "LLLL yyyy");
 
     // Lấy views qua video_insights
@@ -199,16 +219,7 @@ export async function fetchMonthlyVideoStatsForPage(
     result[month].shares += shares;
   }
 
-  // Trả về mảng đã sắp xếp theo thời gian, chỉ lấy các tháng >= startTime
-  const sorted = Object.values(result)
-    .filter(item => {
-      const itemDate = new Date(item.month);
-      const startDate = new Date(format(new Date(startTime), "LLLL yyyy"));
-      return itemDate >= startDate;
-    })
-    .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
-
-  return sorted.slice(-3);
+  return Object.values(result)
 }
 
 export async function fetchVideoDetailStatsForPage(
@@ -225,12 +236,10 @@ export async function fetchVideoDetailStatsForPage(
     `https://graph.facebook.com/v23.0/me/accounts?access_token=${accessToken}`
   );
   const pagesData = await pagesRes.json();
-  const targetPage = pagesData.data.find((page: any) => page.name === "Create AI Video");
+  const targetPage = pagesData.data.find((page: any) => page.name === PAGE_NAME);
   if (!targetPage) throw new Error("Page 'Create AI Video' not found in your managed pages.");
   const pageAccessToken = targetPage.access_token;
   const pageId = targetPage.id;
-  const end = new Date(new Date(endTime).getTime() + 2 * 24 * 60 * 60 * 1000);
-
 
   // Lấy danh sách video
   let videos: any[] = [];
@@ -243,10 +252,14 @@ export async function fetchVideoDetailStatsForPage(
   }
 
   // Lọc video theo khoảng thời gian nếu có
-  if (startTime && end) {
+  if (startTime && endTime) {
     videos = videos.filter((video) => {
       const created = new Date(video.created_time);
-      return created >= new Date(startTime) && created <= new Date(end);
+      // Compare using start of day for startTime and endTime
+      const createdDate = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+      const startDate = new Date(new Date(startTime).getFullYear(), new Date(startTime).getMonth(), new Date(startTime).getDate());
+      const endDate = new Date(new Date(endTime).getFullYear(), new Date(endTime).getMonth(), new Date(endTime).getDate(), 23, 59, 59, 999);
+      return createdDate >= startDate && createdDate <= endDate;
     });
   }
 

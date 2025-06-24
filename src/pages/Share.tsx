@@ -20,10 +20,21 @@ import { connectToFacebook, connectToYouTube, connectToTiktok } from "@/lib/oaut
 import { fetchTotalVideoViewsForPage } from "@/lib/facebook-insights";
 import { fetchTotalYouTubeViewsByOwnerChannel } from "@/lib/youtube-insights";
 import { fetchTotalTiktokViews } from "@/lib/tiktok-insights";
+import { useEffect, useState } from "react";
 
 // Replace the mock video links with your real video links here.
 // Example:
-const initialMockVideos = [
+type Video = {
+  id: string;
+  title: string;
+  thumbnail: string;
+  date: string;
+  sharedOn: { facebook: boolean; youtube: boolean; tiktok: boolean };
+  videoUrl: string;
+  link?: string;
+};
+
+const initialMockVideos: Video[] = [
   {
     id: 'vid1',
     title: 'My Awesome First Video',
@@ -58,6 +69,8 @@ const initialMockVideos = [
   }
 ];
 
+const API_SOCIAL_ALL = import.meta.env.VITE_PUBLIC_API_URL + "/social/all";
+
 export default function Share() {
   const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
   const YOUTUBE_APP_ID = import.meta.env.VITE_YOUTUBE_APP_ID;
@@ -82,7 +95,7 @@ export default function Share() {
     tiktok: 0,
   }
 
-  const [videos, setVideos] = React.useState(initialMockVideos);
+  const [videos, setVideos] = useState(initialMockVideos);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [selectedVideo, setSelectedVideo] = React.useState<(typeof videos)[0] | null>(null);
   const [videoToDeleteId, setVideoToDeleteId] = React.useState<string | null>(null);
@@ -141,6 +154,36 @@ export default function Share() {
       console.log("tiktokTotalViews: ", tiktokTotalViews);
     }
   }, [youtubeTotalViews]);
+
+  // Lấy danh sách video đã share từ backend
+  const fetchSharedVideos = async () => {
+    try {
+      const res = await fetch(API_SOCIAL_ALL, { method: "GET" });
+      if (!res.ok) throw new Error("Failed to fetch shared videos");
+      const data = await res.json();
+      // data là mảng các object {id, link, sharedOn}
+      setVideos(prevVideos =>
+        prevVideos.map(video => {
+          const found = data.find((item: any) => item.id === video.id);
+          if (found) {
+            return {
+              ...video,
+              sharedOn: found.sharedOn,
+              link: found.link,
+            };
+          }
+          return video;
+        })
+      );
+    } catch (err) {
+      // Có thể toast hoặc log nếu cần
+    }
+  };
+
+  // Gọi khi load trang
+  useEffect(() => {
+    fetchSharedVideos();
+  }, []);
 
   const handleShareClick = (video: (typeof videos)[0]) => {
     setSelectedVideo(video);
@@ -216,6 +259,7 @@ export default function Share() {
     }
   };
 
+  // Khi chia sẻ xong, cập nhật lại danh sách link/share
   const handleConfirmShare = (videoId: string, sharedPlatforms: { [key: string]: boolean }) => {
     setVideos(prevVideos =>
       prevVideos.map(video => {
@@ -232,6 +276,8 @@ export default function Share() {
       })
     );
     setDialogOpen(false);
+    // Gọi lại API để cập nhật link mới nhất
+    fetchSharedVideos();
   };
 
   return (
@@ -315,6 +361,7 @@ export default function Share() {
                 onDelete={() => handleDeleteClick(video.id)}
                 sharedOn={video.sharedOn}
                 videoUrl={video.videoUrl}
+                link={video.link} // <-- thêm dòng này
               >
                 {video.videoUrl ? (
                   <video

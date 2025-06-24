@@ -42,7 +42,7 @@ export function PlatformConnectCard({ platformName, Icon, isConnected, onConnect
                 {views !== undefined ? (
                 <p className="text-xs text-muted-foreground">{views.toLocaleString()} views</p>
                 ) : (
-                <p className="text-xs text-muted-foreground">Connecting</p>
+                <p className="text-xs text-muted-foreground">Connecting...</p>
                 )}
               </div>
               </div>

@@ -11,7 +11,7 @@ export async function uploadVideoToTiktokByUrl(
   videoUrl: string,
   title: string,
   description: string
-): Promise<{ video_id: string }> {
+): Promise<{ video_id: string, url: string }> {
   const accessToken = localStorage.getItem("tt_access_token");
   if (!accessToken) throw new Error("TikTok access token not found. Please login first.");
 

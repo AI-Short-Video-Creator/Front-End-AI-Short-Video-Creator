@@ -8,6 +8,7 @@ import { ScriptCreation } from "@/components/create/ScriptCreation"
 // import { VideoResult } from "@/components/create/VideoResult"
 import useScript from "@/hooks/data/useScript"
 import { useToast } from "@/hooks/use-toast"
+import { readTextFromFile } from "@/helpers/readScriptFromFile"
 
 export default function Create() {
   const location = useLocation()
@@ -26,6 +27,7 @@ export default function Create() {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [keyword, setKeyword] = React.useState("")
   const [script, setScript] = React.useState("")
+  const [canRegenerate, setCanRegenerate] = React.useState(true)
 
   const [personalStyle, setPersonalStyle] = React.useState({
     style: "informative",
@@ -75,6 +77,7 @@ export default function Create() {
     const script = await createScriptAsync(scriptData)
     if (script) {
       setScript(script.data)
+      setCanRegenerate(true)
       setCurrentStep(2)
     } else {
       toast({
@@ -93,7 +96,23 @@ export default function Create() {
   const handleKeywordSelect = (keyword: string) => {
     setKeyword(keyword)
   }
-  
+
+  const handleImportScript = (file: File) => {
+    const content = readTextFromFile(file)
+    content.then(text => {
+      setScript(text)
+      setCanRegenerate(false)
+      console.log("Can regenerate set to false")
+      setCurrentStep(2)
+    }).catch(error => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    })
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -110,6 +129,7 @@ export default function Create() {
               isGenerating={isCreatingScript}
               personalStyle={personalStyle}
               handleChange={handleChange}
+              handleImportScript={handleImportScript}
             />
           )}
           
@@ -120,6 +140,7 @@ export default function Create() {
               handleBack={handleBack}
               handleSaveScript={handleSaveScript}
               personalStyle={personalStyle}
+              canRegenerate={canRegenerate}
             />
           )}
           

@@ -19,6 +19,7 @@ interface TopicSelectionProps {
   isGenerating: boolean;
   personalStyle: PersonalStyle;
   handleChange: (field: string, value: any) => void;
+  handleImportScript?: (file: File) => void;
 }
 
 export function TopicSelection({
@@ -28,7 +29,8 @@ export function TopicSelection({
   handleGenerateScript,
   isGenerating,
   personalStyle,
-  handleChange
+  handleChange,
+  handleImportScript
 }: TopicSelectionProps) {
   const languages = React.useMemo(() => new LanguageList().getData(), [])
   const [searchTerm, setSearchTerm] = React.useState("")
@@ -41,9 +43,39 @@ export function TopicSelection({
   )
   const [source, setSource] = React.useState("youtube");
   const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const [uploadedFile, setUploadedFile] = React.useState<File | null>(null);
+  const [focused, setFocused] = React.useState(false);
 
   const debouncedKeyword = useDebouncedValue(keyword, 300);
   const { suggestions } = useSuggestion(debouncedKeyword, 5, source);
+
+  const getFileIcon = (file: File) => {
+    if (file.name.endsWith('.docx')) {
+      return (
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24" className="mx-auto mb-2 text-blue-600">
+          <rect x="3" y="3" width="18" height="18" rx="2" fill="#2563eb"/>
+          <text x="12" y="16" fontSize="7" fill="#fff" fontWeight="bold" textAnchor="middle" alignmentBaseline="middle">DOCX</text>
+        </svg>
+      );
+    } else if (file.name.endsWith('.txt')) {
+      return (
+        <svg width="32" height="32" fill="none" viewBox="0 0 24 24" className="mx-auto mb-2 text-gray-500">
+          <rect x="3" y="3" width="18" height="18" rx="2" fill="#6b7280"/>
+          <text x="12" y="16" fontSize="7" fill="#fff" fontWeight="bold" textAnchor="middle" alignmentBaseline="middle">TXT</text>
+        </svg>
+      );
+    } else {
+      return null;
+    }
+  };
+
+  React.useEffect(() => {
+    if (focused && suggestions && suggestions.length > 0 && keyword.trim()) {
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  }, [focused, suggestions, keyword]);
 
   return (
     <Card>
@@ -91,8 +123,11 @@ export function TopicSelection({
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="text-base"
-              onFocus={() => keyword && setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => {
+                setFocused(false);
+                setTimeout(() => setShowSuggestions(false), 50);
+              }}
             />
             {showSuggestions && suggestions?.length > 0 && (
               <div className="absolute left-0 right-0 mt-1 z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-80 max-h-48 overflow-y-auto">
@@ -228,6 +263,56 @@ export function TopicSelection({
                 <SelectItem value="often">Often</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium">Upload Existing Script</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center relative group hover:border-primary transition-colors min-h-[120px] mb-4">
+              {uploadedFile ? (
+                <>
+                  {getFileIcon(uploadedFile)}
+                  <div className="text-gray-700 text-sm font-medium mb-2">{uploadedFile.name}</div>
+                  <button
+                    type="button"
+                    className="inline-flex items-center px-3 py-1 bg-primary text-white rounded hover:bg-primary/90 transition-colors text-sm gap-2"
+                    onClick={() => handleImportScript && handleImportScript(uploadedFile)}
+                  >
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 10l5-5m0 0l5 5m-5-5v12" />
+                    </svg>
+                    Import
+                  </button>
+                  <button
+                    type="button"
+                    className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                    onClick={() => setUploadedFile(null)}
+                    title="Remove file"
+                  >
+                    &times;
+                  </button>
+                </>
+              ) : (
+                <>
+                  <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="mx-auto mb-2 text-gray-400 group-hover:text-primary transition-colors">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 10l5-5m0 0l5 5m-5-5v12" />
+                  </svg>
+                  <input
+                    type="file"
+                    accept=".docx,.txt"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setUploadedFile(file);
+                      }
+                    }}
+                  />
+                  <div className="text-gray-500 text-sm">
+                    Click to upload or drag and drop <b>.docx</b>, <b>.txt</b> file
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Max size: 5 MB</div>
+                </>
+              )}
+            </div>
           </div>
           <Button 
             className="w-full gap-2"

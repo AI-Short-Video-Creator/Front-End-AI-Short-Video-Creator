@@ -11,6 +11,7 @@ interface ScriptCreationProps {
   handleSaveScript: (content: string) => void;
   keyword?: string;
   personalStyle?: PersonalStyle;
+  canRegenerate?: boolean;
 }
 
 export function ScriptCreation({
@@ -18,7 +19,8 @@ export function ScriptCreation({
   handleBack,
   handleSaveScript,
   keyword,
-  personalStyle
+  personalStyle,
+  canRegenerate = true
 }: ScriptCreationProps) {
   return (
     <Card>
@@ -34,8 +36,9 @@ export function ScriptCreation({
           onSave={handleSaveScript}
           args={{
             keyword,
-            personalStyle
+            personalStyle,
           }}
+          canRegenerate={canRegenerate}
         />
       </CardContent>
       <CardFooter className="flex justify-between">

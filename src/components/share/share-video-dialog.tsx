@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ShareVideoPreview } from "@/components/share/share-video-preview"
 import { Facebook, Youtube, Music } from "lucide-react"
 import { toast } from "sonner"
-import { postVideoToPage } from "@/lib/facebook-insights";
+import { postVideoToPageWithThumbnail } from "@/lib/facebook-insights";
 import { uploadVideoToYouTubeViaBackend } from "@/lib/youtube-insights";
 import { uploadVideoToTiktokByUrl } from "@/lib/tiktok-insights";
 const API_CAPTION_URL = import.meta.env.VITE_PUBLIC_API_URL + "/caption/social" as string;
@@ -94,7 +94,7 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
           toast.error("No video URL found for sharing to Facebook.");
         }
         try {
-          const fbRes = await postVideoToPage(video.videoUrl, title, description);
+          const fbRes = await postVideoToPageWithThumbnail(video.videoUrl, title, description, video.thumbnail);
           toast.success("Video shared to Facebook page successfully!");
           let fbLink = "";
           if (fbRes && typeof fbRes === "object" && fbRes.permalink_url) {
@@ -143,8 +143,8 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
           const tiktokRes = await uploadVideoToTiktokByUrl(video.videoUrl, title, description);
           toast.success("Video shared to TikTok successfully!");
           let tiktokLink = "";
-          if (tiktokRes && typeof tiktokRes === "object" && tiktokRes.url) {
-            tiktokLink = tiktokRes.url;
+          if (tiktokRes && typeof tiktokRes === "object" && tiktokRes.publish_id) {
+            tiktokLink = "https://www.tiktok.com/@kaytlyntruong28/video/" + tiktokRes.publish_id;
           } else if (tiktokRes && typeof tiktokRes === "string") {
             tiktokLink = tiktokRes;
           }

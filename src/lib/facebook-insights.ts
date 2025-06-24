@@ -47,8 +47,14 @@ export async function fetchTotalVideoViewsForPage(): Promise<number> {
  * @param videoUrl - The public URL of the video file
  * @param title - The title of the post
  * @param caption - The caption/description of the post
+ * @param thumbnailUrl - The public URL of the thumbnail image
  */
-export async function postVideoToPage(videoUrl: string, title: string, caption: string): Promise<{ video_id: string; permalink_url?: string }> {
+export async function postVideoToPageWithThumbnail(
+  videoUrl: string,
+  title: string,
+  caption: string,
+  thumbnailUrl: string
+): Promise<{ video_id: string; permalink_url?: string }> {
   const accessToken = localStorage.getItem("fb_access_token");
   if (!accessToken) {
     throw new Error("Access token not found. Please log in first.");
@@ -66,12 +72,18 @@ export async function postVideoToPage(videoUrl: string, title: string, caption: 
   const pageAccessToken = targetPage.access_token;
   const pageId = targetPage.id;
 
-  // Post the video to the page
+  // Download video file as Blob
+  const videoBlob = await fetch(videoUrl).then(res => res.blob());
+  // Download thumbnail as Blob
+  const thumbBlob = await fetch(thumbnailUrl).then(res => res.blob());
+
+  // Prepare FormData
   const formData = new FormData();
-  formData.append("file_url", videoUrl); // public video URL
+  formData.append("source", new File([videoBlob], "video.mp4", { type: videoBlob.type || "video/mp4" }));
   formData.append("title", title);
   formData.append("description", caption);
   formData.append("access_token", pageAccessToken);
+  formData.append("thumb", new File([thumbBlob], "thumbnail.jpg", { type: thumbBlob.type || "image/jpeg" }));
 
   // Facebook Graph API endpoint for uploading video to a page
   const uploadRes = await fetch(`https://graph.facebook.com/v23.0/${pageId}/videos`, {

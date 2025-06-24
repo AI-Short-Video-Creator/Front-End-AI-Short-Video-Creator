@@ -44,6 +44,7 @@ export function TopicSelection({
   const [source, setSource] = React.useState("youtube");
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const [uploadedFile, setUploadedFile] = React.useState<File | null>(null);
+  const [focused, setFocused] = React.useState(false);
 
   const debouncedKeyword = useDebouncedValue(keyword, 300);
   const { suggestions } = useSuggestion(debouncedKeyword, 5, source);
@@ -67,6 +68,14 @@ export function TopicSelection({
       return null;
     }
   };
+
+  React.useEffect(() => {
+    if (focused && suggestions && suggestions.length > 0 && keyword.trim()) {
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  }, [focused, suggestions, keyword]);
 
   return (
     <Card>
@@ -114,8 +123,11 @@ export function TopicSelection({
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="text-base"
-              onFocus={() => keyword && setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => {
+                setFocused(false);
+                setTimeout(() => setShowSuggestions(false), 50);
+              }}
             />
             {showSuggestions && suggestions?.length > 0 && (
               <div className="absolute left-0 right-0 mt-1 z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-80 max-h-48 overflow-y-auto">

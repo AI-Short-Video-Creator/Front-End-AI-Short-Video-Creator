@@ -27,6 +27,7 @@ export default function Create() {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [keyword, setKeyword] = React.useState("")
   const [script, setScript] = React.useState("")
+  const [canRegenerate, setCanRegenerate] = React.useState(true)
 
   const [personalStyle, setPersonalStyle] = React.useState({
     style: "informative",
@@ -76,6 +77,7 @@ export default function Create() {
     const script = await createScriptAsync(scriptData)
     if (script) {
       setScript(script.data)
+      setCanRegenerate(true)
       setCurrentStep(2)
     } else {
       toast({
@@ -99,6 +101,8 @@ export default function Create() {
     const content = readTextFromFile(file)
     content.then(text => {
       setScript(text)
+      setCanRegenerate(false)
+      console.log("Can regenerate set to false")
       setCurrentStep(2)
     }).catch(error => {
       toast({
@@ -136,6 +140,7 @@ export default function Create() {
               handleBack={handleBack}
               handleSaveScript={handleSaveScript}
               personalStyle={personalStyle}
+              canRegenerate={canRegenerate}
             />
           )}
           

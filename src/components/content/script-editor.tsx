@@ -13,14 +13,17 @@ interface ScriptEditorProps {
     keyword?: string,
     personalStyle?: PersonalStyle
   }
+  canRegenerate?: boolean
 }
 
-export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditorProps) {
+export function ScriptEditor({ initialContent = "", onSave, args, canRegenerate }: ScriptEditorProps) {
   const [content, setContent] = React.useState(initialContent)
   const { createScriptAsync, isCreatingScript } = useScript()
   const { toast } = useToast()
 
   const handleGenerate = async () => {
+    console.log("Can regenerate:", canRegenerate)
+
     const script = await createScriptAsync({
       keyword: args?.keyword || "",
       personalStyle: args?.personalStyle || {
@@ -58,7 +61,7 @@ export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditor
           size="sm"
           className="gap-2 min-w-[120px]"
           onClick={handleGenerate}
-          disabled={isCreatingScript}
+          disabled={isCreatingScript || !canRegenerate}
         >
           <RefreshCw className="h-4 w-4" />
           {isCreatingScript ? <LoadingSpinner/> : "Regenerate"}

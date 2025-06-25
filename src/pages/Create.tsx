@@ -10,15 +10,21 @@ import CreativeEditor from "@/components/create/CreativeEditor";
 import useImage from "@/hooks/data/useImage";
 import useVideo from "@/hooks/data/useVideo";
 import { useToast } from "@/hooks/use-toast";
-// import { VoiceCustomization } from "@/components/create/VoiceCustomization"
+import { VoiceCustomization } from "@/components/create/VoiceCustomization"
+import useVoice from "@/hooks/data/useVoice"
+import useAudioSynthesis from "@/hooks/data/useAudioSynthesis"
 // import { VideoResult } from "@/components/create/VideoResult"
 import useScript from "@/hooks/data/useScript"
 import { readTextFromFile } from "@/helpers/readScriptFromFile"
 
 export default function Create() {
+  const totalSteps = 5;
+
   const navigate = useNavigate();
   const location = useLocation();
   const { createScriptAsync, isCreatingScript } = useScript();
+  const { generateAudio, isGeneratingAudio } = useAudioSynthesis();
+  const { deleteVoice } = useVoice();
   const { createImagetAsync, isCreatingImage } = useImage();
   const { createVideoAsync, isCreatingVideo } = useVideo();
   const { toast } = useToast();
@@ -32,6 +38,24 @@ export default function Create() {
     }
   }, [location.search]);
 
+
+  const [tab, setTab] = React.useState<"google" | "elevenlabs">("google");
+  const [googleCloudVoice, setGoogleCloudVoice] = React.useState({
+    name: null,
+    languageCode: null,
+    speakingRate: 1.0,
+    pitch: 0.0,
+    volume: 0.0,
+  });
+  const [elevenLabsClonedVoice, setElevenLabsClonedVoice] = React.useState({
+    voiceId: null,
+    stability: 0.5,
+    speed: 1.0,
+    state: "idle" as "idle" | "processing" | "ready",
+  });
+  const [generatedAudioPath, setGeneratedAudioPath] = React.useState<string | null>(null);
+
+
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedVoice, setSelectedVoice] = React.useState(null);
   const [selectedKeywords, setSelectedKeywords] = React.useState([]);
@@ -39,8 +63,6 @@ export default function Create() {
   const [downloadProgress, setDownloadProgress] = React.useState(0);
   const [sessionId, setSessionId] = React.useState("");
   const [videoUrl, setVideoUrl] = React.useState(""); // Changed from videoPath
-
-  const totalSteps = 4;
 
   
   const [keyword, setKeyword] = React.useState("")
@@ -133,7 +155,7 @@ export default function Create() {
 
   const handleCreateVideo = async () => {
     console.log("Creating video...");
-    setCurrentStep(4);
+    setCurrentStep(5);
   };
 
   const handleSelectVoice = (voiceId: any) => {
@@ -173,6 +195,62 @@ export default function Create() {
     })
   };
 
+  const extractNarrtion = (script: string) => {
+    const narrationLines = script.split(/\r?\n/).filter(line => line.trim().startsWith("Narration:"));
+    return narrationLines.map(line => line.slice("Narration:".length).trim()).join("\n");
+  }
+
+  const handleGenerateAudio = async () => {
+    if (tab === "google") {
+      if (!googleCloudVoice.name || !script) {
+        toast({
+          title: "Missing Information",
+          description: "Please select a voice and provide a script.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const payload = {
+        provider: 'gctts' as const,
+        script: extractNarrtion(script),
+        voice_name: googleCloudVoice.name,
+        language_code: googleCloudVoice.languageCode!,
+        speaking_rate: googleCloudVoice.speakingRate,
+        pitch: googleCloudVoice.pitch,
+        volume_gain_db: googleCloudVoice.volume,
+      };
+      const result = await generateAudio(payload);
+      if (result && result.audio_path) {
+        setGeneratedAudioPath(result.audio_path);
+        setCurrentStep(4);
+      }
+    } else if (tab === "elevenlabs") {
+      if (!elevenLabsClonedVoice.voiceId || elevenLabsClonedVoice.state !== "ready" || !script) {
+        toast({
+          title: "Missing Information",
+          description: "Please select a voice and provide a script.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const payload = {
+        provider: 'elevenlabs' as const,
+        script: extractNarrtion(script),
+        voice_id: elevenLabsClonedVoice.voiceId,
+        stability: elevenLabsClonedVoice.stability,
+        speed: elevenLabsClonedVoice.speed,
+      };
+      const result = await generateAudio(payload);
+      if (result && result.audio_path) {
+        setGeneratedAudioPath(result.audio_path);
+        setCurrentStep(4);
+      }
+    }
+    if (elevenLabsClonedVoice.voiceId) {
+      deleteVoice(elevenLabsClonedVoice.voiceId);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -203,8 +281,23 @@ export default function Create() {
               canRegenerate={canRegenerate}
             />
           )}
-          
+
           {currentStep === 3 && (
+            <VoiceCustomization
+              script={script}
+              handleBack={handleBack}
+              tab={tab}
+              setTab={setTab}
+              googleCloudVoice={googleCloudVoice}
+              setGoogleCloudVoice={setGoogleCloudVoice}
+              elevenLabsClonedVoice={elevenLabsClonedVoice}
+              setElevenLabsClonedVoice={setElevenLabsClonedVoice}
+              handleGenerateAudio={handleGenerateAudio}
+              isGeneratingAudio={isGeneratingAudio}
+            />
+          )}
+          
+          {currentStep === 4 && (
             <ImageCreation 
               selectedVoice={selectedVoice}
               handleBack={handleBack}
@@ -216,14 +309,13 @@ export default function Create() {
             />
           )}
           
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <CreativeEditor
               downloadProgress={downloadProgress}
               handleBack={handleBack}
               mediaObject={{mediaUrls: imageUrls, audioUrl: ""}} // Changed from videoPath
             />
           )}
-
           
         </div>
       </main>

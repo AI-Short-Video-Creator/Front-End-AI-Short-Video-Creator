@@ -7,20 +7,12 @@ import { ScriptCreation } from "@/components/create/ScriptCreation";
 import {ImageCreation} from "@/components/create/ImageCreation";
 import { VideoCreator } from "@/components/create/VideoCreator";
 import CreativeEditor from "@/components/create/CreativeEditor";
-import useScript from "@/hooks/data/useScript";
 import useImage from "@/hooks/data/useImage";
 import useVideo from "@/hooks/data/useVideo";
 import { useToast } from "@/hooks/use-toast";
-import * as React from "react"
-import { useLocation } from "react-router-dom"
-import { Header } from "@/components/navigation/header"
-import { StepIndicator } from "@/components/ui/step-indicator"
-import { TopicSelection } from "@/components/create/TopicSelection"
-import { ScriptCreation } from "@/components/create/ScriptCreation"
 // import { VoiceCustomization } from "@/components/create/VoiceCustomization"
 // import { VideoResult } from "@/components/create/VideoResult"
 import useScript from "@/hooks/data/useScript"
-import { useToast } from "@/hooks/use-toast"
 import { readTextFromFile } from "@/helpers/readScriptFromFile"
 
 export default function Create() {
@@ -41,8 +33,6 @@ export default function Create() {
   }, [location.search]);
 
   const [currentStep, setCurrentStep] = React.useState(1);
-  const [topic, setTopic] = React.useState("");
-  const [script, setScript] = React.useState("");
   const [selectedVoice, setSelectedVoice] = React.useState(null);
   const [selectedKeywords, setSelectedKeywords] = React.useState([]);
   const [imageUrls, setImageUrls] = React.useState([]);
@@ -53,7 +43,6 @@ export default function Create() {
   const totalSteps = 4;
 
   
-  const [currentStep, setCurrentStep] = React.useState(1)
   const [keyword, setKeyword] = React.useState("")
   const [script, setScript] = React.useState("")
   const [canRegenerate, setCanRegenerate] = React.useState(true)
@@ -72,7 +61,6 @@ export default function Create() {
     setPersonalStyle(prev => ({ ...prev, [field]: value }))
   }
 
-  const totalSteps = 4
   
   const handleBack = () => {
     if (currentStep > 1) {

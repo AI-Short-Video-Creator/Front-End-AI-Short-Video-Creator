@@ -7,6 +7,7 @@ import {
 import type CreativeEditorSDK from '@cesdk/cesdk-js';
 import apiSchema from './myApiSchema.json';
 import axios from 'axios';
+import axiosInstance from "@/config";
 
 
 // Define your input type based on your schema
@@ -76,13 +77,11 @@ export function MyImageProvider({
           loggingMiddleware(),
           // Example of upload middleware that stores generated images on your server
           uploadMiddleware(async output => {
-            // Upload the image to your server
-            console.log('Uploading image to server:', output.url);
-            // const response = await uploadToCloudinary(output.url)
-            // console.log('Upload response:', response);
+            const res = await axiosInstance.post('/file/upload-image-from-url', {image_url: output.url})
+            console.log('Image uploaded:', res.data);
             return {
               ...output,
-              url: output.url, // Adjust based on your upload logic
+              url: res.data.cloudinary_url, // Adjust based on your upload logic
             };
           }),
         ],

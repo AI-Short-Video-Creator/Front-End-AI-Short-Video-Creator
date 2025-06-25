@@ -227,7 +227,7 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
           </Button>
         <Button onClick={handleDownload} disabled={isExporting || !cesdk}>
           <Download className="mr-2 h-4 w-4" />
-          {isExporting ? "Exporting..." : "Download Video"}
+          {isExporting ? "Exporting..." : "Save to Workspace"}
         </Button>
       </CardFooter>
     </Card>

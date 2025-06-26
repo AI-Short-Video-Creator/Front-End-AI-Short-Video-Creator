@@ -3,8 +3,18 @@ import { useToast } from "../use-toast";
 import axiosInstance from "@/config";
 
 export type CreateScriptRequest = {
-  keywords: string[];
-  topic: string;
+    keyword: string;
+    personalStyle: PersonalStyle;
+}
+
+export type PersonalStyle = {
+    style: string;
+    language: string;
+    wordCount: number;
+    tone: string;
+    perspective: string;
+    humor: string;
+    quotes: string;
 }
 
 const useScript = () => {
@@ -12,8 +22,14 @@ const useScript = () => {
     const { isSuccess: isCreatedScript, mutateAsync: createScriptAsync, isPending: isCreatingScript } = useMutation({
         mutationFn: async (data: CreateScriptRequest) => {
             const res = await axiosInstance.post("/script/", {
-                keywords: data.keywords,
-                topic: data.topic,
+                keyword: data.keyword,
+                style: data.personalStyle.style,
+                language: data.personalStyle.language,
+                wordCount: data.personalStyle.wordCount,
+                tone: data.personalStyle.tone,
+                perspective: data.personalStyle.perspective,
+                humor: data.personalStyle.humor,
+                quotes: data.personalStyle.quotes,
             });
             return res.data;
         },

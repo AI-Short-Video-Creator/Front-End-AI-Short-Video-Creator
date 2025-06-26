@@ -4,21 +4,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { ScriptEditor } from "@/components/content/script-editor"
 import { ArrowLeft } from "lucide-react"
-
+import { PersonalStyle } from "@/hooks/data/useScript"
 interface ScriptCreationProps {
   script: string;
   handleBack: () => void;
   handleSaveScript: (content: string) => void;
-  topic: string;
-  keywords: string[];
+  keyword?: string;
+  personalStyle?: PersonalStyle;
+  canRegenerate?: boolean;
 }
 
 export function ScriptCreation({
   script,
   handleBack,
   handleSaveScript,
-  topic,
-  keywords
+  keyword,
+  personalStyle,
+  canRegenerate = true
 }: ScriptCreationProps) {
   return (
     <Card>
@@ -32,8 +34,11 @@ export function ScriptCreation({
         <ScriptEditor 
           initialContent={script} 
           onSave={handleSaveScript}
-          topic={topic}
-          keywords={keywords}
+          args={{
+            keyword,
+            personalStyle,
+          }}
+          canRegenerate={canRegenerate}
         />
       </CardContent>
       <CardFooter className="flex justify-between">

@@ -75,6 +75,7 @@ export default function Share() {
   const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
   const YOUTUBE_APP_ID = import.meta.env.VITE_YOUTUBE_APP_ID;
   const TIKTOK_CLIENT_KEY = import.meta.env.VITE_TIKTOK_CLIENT_KEY;
+  const CHANNEL_NAME = import.meta.env.VITE_YOUTUBE_CHANNEL;
 
   const [connections, setConnections] = React.useState({
     facebook: false,
@@ -132,7 +133,7 @@ export default function Share() {
     if (ytToken && ytName && ytAvatar) {
       setConnections((prev) => ({ ...prev, youtube: true }));
       setYoutubeProfile({ name: ytName, avatar: ytAvatar });
-      //fetchTotalYouTubeViewsByOwnerChannel("QuickClip Creator").then(setYoutubeTotalViews).catch(() => setYoutubeTotalViews(0));
+      fetchTotalYouTubeViewsByOwnerChannel(CHANNEL_NAME).then(setYoutubeTotalViews).catch(() => setYoutubeTotalViews(0));
       console.log("youtubeTotalViews: ", youtubeTotalViews);
     }
   }, []);

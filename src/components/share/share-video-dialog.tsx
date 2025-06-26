@@ -49,6 +49,7 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
   const [sharing, setSharing] = React.useState(false);
   const [statusText, setStatusText] = React.useState<string | null>(null);
   const [generatingCaption, setGeneratingCaption] = React.useState(false);
+  const [language, setLanguage] = React.useState("en");
 
   React.useEffect(() => {
     setTitle(video.title);
@@ -170,8 +171,8 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
   const handleAutoCaption = async () => {
     setGeneratingCaption(true);
     try {
-      setStatusText(null); // Không hiện "Generating..." ở chỗ khác
-      const url = `${API_CAPTION_URL}?video_context=${encodeURIComponent(title)}`;
+      setStatusText(null);
+      const url = `${API_CAPTION_URL}?video_context=${encodeURIComponent(title)}&lang=${language}`;
       const res = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -260,21 +261,45 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
           <div className="text-center text-primary font-semibold py-2">{statusText}</div>
         )}
 
-        <DialogFooter className="pt-4 sm:justify-between">
-          <Button
-            variant="outline"
-            onClick={handleAutoCaption}
-            className="mt-2 w-full sm:mt-0 sm:w-auto"
-            disabled={sharing || generatingCaption}
-          >
-            {generatingCaption ? "Generating..." : "Generate auto captions"}
-          </Button>
-          <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row sm:justify-end">
-              <DialogClose asChild>
-                <Button variant="ghost" className="w-full sm:w-auto">
-                  Cancel
-                </Button>
-              </DialogClose>
+        <DialogFooter className="pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          {/* Left side: Auto caption & language */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              variant="outline"
+              onClick={handleAutoCaption}
+              className="w-full sm:w-auto"
+              disabled={sharing || generatingCaption}
+            >
+              {generatingCaption ? "Generating..." : "Generate auto captions"}
+            </Button>
+            {/* Language Selector */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="language" className="font-semibold">Language</Label>
+              <select
+                id="language"
+                className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-black text-white"
+                value={language}
+                onChange={e => setLanguage(e.target.value)}
+              >
+                <option value="en">English</option>
+                <option value="vi">Vietnamese</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+                <option value="de">German</option>
+                <option value="ru">Russian</option>
+              </select>
+            </div>
+          </div>
+          {/* Right side: Action buttons */}
+          <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:justify-end">
+            <DialogClose asChild>
+              <Button variant="ghost" className="w-full sm:w-auto">
+          Cancel
+              </Button>
+            </DialogClose>
             <Button
               onClick={handleQuickShare}
               className="w-full sm:w-auto"

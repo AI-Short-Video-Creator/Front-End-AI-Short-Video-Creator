@@ -2,7 +2,7 @@ import * as React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { VoiceSelection } from "@/components/content/voice-selection";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import useImage from "@/hooks/data/useImage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -10,10 +10,11 @@ interface ImageCreationProps {
   selectedVoice: number | null;
   handleBack: () => void;
   handleSelectVoice: (voiceId: number) => void;
-  handleCreateVideo: () => void;
+  // handleCreateVideo: () => void;
   script: string;
   imageUrls: ImageInfo[];
   sessionId: string;
+  handleNextStep?: () => void;
 }
 
 type ImageInfo = {
@@ -27,10 +28,11 @@ export function ImageCreation({
   selectedVoice,
   handleBack,
   handleSelectVoice,
-  handleCreateVideo,
+  // handleCreateVideo,
   script,
   imageUrls,
   sessionId,
+  handleNextStep,
 }: ImageCreationProps) {
   const { regenerateImageAsync, isCreatingImage, isRegeneratingImage } = useImage();
   const { toast } = useToast();
@@ -112,15 +114,23 @@ export function ImageCreation({
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={handleBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-        <Button
+        {/* <Button
           onClick={handleCreateVideo}
           disabled={selectedVoice === null || isCreatingImage || isRegeneratingImage}
         >
           Create Video <Check className="ml-2 h-4 w-4" />
-        </Button>
+        </Button> */}
+        <div className="flex item-center justify-between w-full">
+          <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
+          <Button
+            onClick={handleNextStep}
+            variant="outline"
+          >
+            Next <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

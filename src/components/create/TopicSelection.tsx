@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles } from "lucide-react"
+import { Sparkles, ArrowRight } from "lucide-react"
 import { LoadingSpinner } from "../Loading"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import LanguageList from "language-list"
@@ -12,6 +12,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { PersonalStyle } from "@/hooks/data/useScript"
 
 interface TopicSelectionProps {
+  script: string;
   keyword: string;
   setKeyword: (keyword: string) => void;
   handleKeywordSelect: (keyword: string) => void;
@@ -20,9 +21,11 @@ interface TopicSelectionProps {
   personalStyle: PersonalStyle;
   handleChange: (field: string, value: any) => void;
   handleImportScript?: (file: File) => void;
+  handleNextStep?: () => void;
 }
 
 export function TopicSelection({
+  script,
   keyword,
   setKeyword,
   handleKeywordSelect,
@@ -30,7 +33,8 @@ export function TopicSelection({
   isGenerating,
   personalStyle,
   handleChange,
-  handleImportScript
+  handleImportScript,
+  handleNextStep,
 }: TopicSelectionProps) {
   const languages = React.useMemo(() => new LanguageList().getData(), [])
   const [searchTerm, setSearchTerm] = React.useState("")
@@ -322,6 +326,20 @@ export function TopicSelection({
             {isGenerating ? <LoadingSpinner /> : <Sparkles className="h-4 w-4" />}
             {isGenerating ? "" : "Generate Script"}
           </Button>
+          {
+            script && (
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleNextStep}
+                  variant="outline"
+                  disabled={!script || isGenerating}
+                  className="gap-2"
+                >
+                  Next <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )
+          }
         </div>
       </CardContent>
     </Card>

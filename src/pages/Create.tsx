@@ -13,9 +13,12 @@ import { useToast } from "@/hooks/use-toast";
 import { VoiceCustomization } from "@/components/create/VoiceCustomization"
 import useVoice from "@/hooks/data/useVoice"
 import useAudioSynthesis from "@/hooks/data/useAudioSynthesis"
-// import { VideoResult } from "@/components/create/VideoResult"
 import useScript from "@/hooks/data/useScript"
+import useWorkspace from "@/hooks/data/useWorkspace"
 import { readTextFromFile } from "@/helpers/readScriptFromFile"
+import { WorkspaceData, CreateWorkspaceRequest } from "@/types/workspace"
+import { Button } from "@/components/ui/button"
+import { FolderOpen } from "lucide-react"
 
 export default function Create() {
   const totalSteps = 5;
@@ -24,19 +27,61 @@ export default function Create() {
   const location = useLocation();
   const { createScriptAsync, isCreatingScript } = useScript();
   const { generateAudio, isGeneratingAudio } = useAudioSynthesis();
-  const { deleteVoice } = useVoice();
+  // const { deleteVoice } = useVoice();
   const { createImagetAsync, isCreatingImage } = useImage();
   const { createVideoAsync, isCreatingVideo } = useVideo();
+  const { createWorkspace, updateWorkspace, useGetWorkspace } = useWorkspace();
   const { toast } = useToast();
+
+  // Workspace state
+  const [currentWorkspaceId, setCurrentWorkspaceId] = React.useState<string | null>(null);
+  const [isLoadingWorkspace, setIsLoadingWorkspace] = React.useState(false);
+
+  // Get workspace data if editing existing workspace
+  const { data: workspaceData, isLoading: isLoadingWorkspaceData } = useGetWorkspace(
+    currentWorkspaceId || ""
+  );
 
   React.useEffect(() => {
     const params = new URLSearchParams(location.search);
+    const workspaceId = params.get('workspace');
     const urlKeyword = params.get('keyword');
-    if (urlKeyword) {
+    
+    if (workspaceId) {
+      setCurrentWorkspaceId(workspaceId);
+      setIsLoadingWorkspace(true);
+    } else if (urlKeyword) {
       setKeyword(urlKeyword);
       handleGenerateScript();
     }
   }, [location.search]);
+
+  // Load workspace data when available
+  React.useEffect(() => {
+    if (workspaceData && !isLoadingWorkspaceData) {
+      loadWorkspaceData(workspaceData);
+      setIsLoadingWorkspace(false);
+    }
+  }, [workspaceData, isLoadingWorkspaceData]);
+
+  const loadWorkspaceData = (workspace: WorkspaceData) => {
+    setKeyword(workspace.keyword);
+    setPersonalStyle(workspace.personalStyle);
+    setScript(workspace.script);
+    setCanRegenerate(workspace.canRegenerate);
+    setCurrentStep(workspace.currentStep);
+    
+    // Voice configuration
+    setTab(workspace.voiceConfig.tab);
+    setGoogleCloudVoice(workspace.voiceConfig.googleCloudVoice);
+    setElevenLabsClonedVoice(workspace.voiceConfig.elevenLabsClonedVoice);
+    setGeneratedAudioPath(workspace.generatedAudioPath || null);
+    
+    // Images and video
+    setImageUrls(workspace.imageUrls);
+    setSessionId(workspace.sessionId);
+    setVideoUrl(workspace.videoUrl || "");
+  };
 
 
   const [tab, setTab] = React.useState<"google" | "elevenlabs">("google");
@@ -52,6 +97,7 @@ export default function Create() {
     stability: 0.5,
     speed: 1.0,
     state: "idle" as "idle" | "processing" | "ready",
+    previewUrl: "",
   });
   const [generatedAudioPath, setGeneratedAudioPath] = React.useState<string | null>(null);
 
@@ -135,6 +181,7 @@ export default function Create() {
       console.log("Image URLs response:", imageUrlsResponse);
       if (imageUrlsResponse) {
         setImageUrls(imageUrlsResponse.data);
+        console.log("Image URLs set:", imageUrlsResponse.data);
         setSessionId(imageUrlsResponse.session_id);
         setCurrentStep(3);
       } else {
@@ -153,10 +200,10 @@ export default function Create() {
     }
   };
 
-  const handleCreateVideo = async () => {
-    console.log("Creating video...");
-    setCurrentStep(5);
-  };
+  // const handleCreateVideo = async () => {
+  //   console.log("Creating video...");
+  //   setCurrentStep(5);
+  // };
 
   const handleSelectVoice = (voiceId: any) => {
     setSelectedVoice(voiceId);
@@ -220,9 +267,9 @@ export default function Create() {
         volume_gain_db: googleCloudVoice.volume,
       };
       const result = await generateAudio(payload);
-      if (result && result.audio_path) {
-        setGeneratedAudioPath(result.audio_path);
-        setCurrentStep(4);
+      if (result && result.audio_url) {
+        setGeneratedAudioPath(result.audio_url);
+        setCurrentStep(5);
       }
     } else if (tab === "elevenlabs") {
       if (!elevenLabsClonedVoice.voiceId || elevenLabsClonedVoice.state !== "ready" || !script) {
@@ -241,13 +288,89 @@ export default function Create() {
         speed: elevenLabsClonedVoice.speed,
       };
       const result = await generateAudio(payload);
-      if (result && result.audio_path) {
-        setGeneratedAudioPath(result.audio_path);
-        setCurrentStep(4);
+      if (result && result.audio_url) {
+        setGeneratedAudioPath(result.audio_url);
+        setCurrentStep(5);
       }
     }
-    if (elevenLabsClonedVoice.voiceId) {
-      deleteVoice(elevenLabsClonedVoice.voiceId);
+    // if (elevenLabsClonedVoice.voiceId) {
+    //   deleteVoice(elevenLabsClonedVoice.voiceId);
+    // }
+  };
+
+  const handleSaveToWorkspace = async () => {
+    try {
+      const currentWorkspace = workspaceData;
+      const workspaceName = currentWorkspaceId ? 
+        currentWorkspace?.name || `Project ${new Date().toLocaleDateString()}` : 
+        `Project ${new Date().toLocaleDateString()}`;
+      
+      const workspaceRequestData: CreateWorkspaceRequest = {
+        name: workspaceName,
+        description: `Video project for keyword: ${keyword.trim()}`,
+        keyword: keyword.trim(),
+        personalStyle: {
+          style: personalStyle.style || "informative",
+          language: personalStyle.language || "en",
+          wordCount: personalStyle.wordCount || 100,
+          tone: personalStyle.tone || "neutral",
+          perspective: personalStyle.perspective || "third",
+          humor: personalStyle.humor || "none",
+          quotes: personalStyle.quotes || "no",
+        },
+        script: script || "",
+        canRegenerate: canRegenerate,
+        voiceConfig: {
+          tab: tab || "google",
+          googleCloudVoice: {
+            name: googleCloudVoice.name || "en-US-Wavenet-D",
+            languageCode: googleCloudVoice.languageCode || "en-US",
+            speakingRate: googleCloudVoice.speakingRate || 1.0,
+            pitch: googleCloudVoice.pitch || 0.0,
+            volume: googleCloudVoice.volume || 0.0,
+          },
+          elevenLabsClonedVoice: {
+            voiceId: elevenLabsClonedVoice.voiceId || null,
+            stability: elevenLabsClonedVoice.stability || 0.5,
+            speed: elevenLabsClonedVoice.speed || 1.0,
+            state: elevenLabsClonedVoice.state || "idle",
+            previewUrl: elevenLabsClonedVoice.previewUrl || null,
+          },
+        },
+        generatedAudioPath: generatedAudioPath || null,
+        imageUrls: imageUrls || [],
+        sessionId: sessionId || null,
+        videoUrl: videoUrl || null,
+        totalSteps: totalSteps,
+        currentStep: currentStep,
+        isCompleted: currentStep === totalSteps,
+      };
+
+      console.log('=== Workspace Request Data ===');
+      console.log('keyword:', workspaceRequestData.keyword);
+      console.log('personalStyle:', workspaceRequestData.personalStyle);
+      console.log('voiceConfig:', workspaceRequestData.voiceConfig);
+      console.log('Full data:', JSON.stringify(workspaceRequestData, null, 2));
+
+      if (currentWorkspaceId) {
+        // Update existing workspace
+        await updateWorkspace({
+          id: currentWorkspaceId,
+          ...workspaceRequestData,
+        });
+      } else {
+        // Create new workspace
+        const result = await createWorkspace(workspaceRequestData);
+        setCurrentWorkspaceId(result.id);
+      }
+    } catch (error) {
+      console.error("Failed to save workspace:", error);
+    }
+  };
+
+  const handleNextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
@@ -256,67 +379,106 @@ export default function Create() {
       <Header />
       <main className="flex-1 container py-8">
         <div className="max-w-3xl mx-auto">
-          <StepIndicator currentStep={currentStep} totalSteps={totalSteps} className="mb-8" />
-          
-          {currentStep === 1 && (
-            <TopicSelection 
-              keyword={keyword}
-              setKeyword={setKeyword}
-              handleKeywordSelect={handleKeywordSelect}
-              handleGenerateScript={handleGenerateScript}
-              isGenerating={isCreatingScript}
-              personalStyle={personalStyle}
-              handleChange={handleChange}
-              handleImportScript={handleImportScript}
-            />
-          )}
-          
-          {currentStep === 2 && (
-            <ScriptCreation
-              keyword={keyword} 
-              script={script}
-              handleBack={handleBack}
-              handleSaveScript={handleSaveScript}
-              personalStyle={personalStyle}
-              canRegenerate={canRegenerate}
-            />
-          )}
+          {isLoadingWorkspace || isLoadingWorkspaceData ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin w-8 h-8 border-4 border-creative-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading workspace...</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-8">
+                <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
+              </div>
+              
+              {currentStep === 1 && (
+                <div className="space-y-4">
+                  <TopicSelection 
+                    script={script}
+                    keyword={keyword}
+                    setKeyword={setKeyword}
+                    handleKeywordSelect={handleKeywordSelect}
+                    handleGenerateScript={handleGenerateScript}
+                    isGenerating={isCreatingScript}
+                    personalStyle={personalStyle}
+                    handleChange={handleChange}
+                    handleImportScript={handleImportScript}
+                    handleNextStep={handleNextStep}
+                  />
+                </div>
+              )}
+              
+              {currentStep === 2 && (
+                <div className="space-y-4">
+                  <ScriptCreation
+                    imageUrls={imageUrls}
+                    keyword={keyword} 
+                    script={script}
+                    handleBack={handleBack}
+                    handleSaveScript={handleSaveScript}
+                    personalStyle={personalStyle}
+                    canRegenerate={canRegenerate}
+                    handleNextStep={handleNextStep}
+                  />
+                </div>
+                )}
 
-          {currentStep === 3 && (
-            <VoiceCustomization
-              script={script}
-              handleBack={handleBack}
-              tab={tab}
-              setTab={setTab}
-              googleCloudVoice={googleCloudVoice}
-              setGoogleCloudVoice={setGoogleCloudVoice}
-              elevenLabsClonedVoice={elevenLabsClonedVoice}
-              setElevenLabsClonedVoice={setElevenLabsClonedVoice}
-              handleGenerateAudio={handleGenerateAudio}
-              isGeneratingAudio={isGeneratingAudio}
-            />
+              {currentStep === 3 && (
+                <div className="space-y-4">
+                  <ImageCreation 
+                    selectedVoice={selectedVoice}
+                    handleBack={handleBack}
+                    handleSelectVoice={handleSelectVoice}
+                    // handleCreateVideo={handleCreateVideo}
+                    script={script}
+                    imageUrls={imageUrls}
+                    sessionId={sessionId}
+                    handleNextStep={handleNextStep}
+                  />
+                </div>
+              )}
+
+              {currentStep === 4 && (
+                <div className="space-y-4">
+                  <VoiceCustomization
+                    generatedAudioPath={generatedAudioPath}
+                    script={script}
+                    handleBack={handleBack}
+                    tab={tab}
+                    setTab={setTab}
+                    googleCloudVoice={googleCloudVoice}
+                    setGoogleCloudVoice={setGoogleCloudVoice}
+                    elevenLabsClonedVoice={elevenLabsClonedVoice}
+                    setElevenLabsClonedVoice={setElevenLabsClonedVoice}
+                    handleGenerateAudio={handleGenerateAudio}
+                    isGeneratingAudio={isGeneratingAudio}
+                    handleNextStep={handleNextStep}
+                  />
+                </div>
+              )}
+
+              {currentStep === 5 && (
+                <div className="space-y-4">
+                  <CreativeEditor
+                    downloadProgress={downloadProgress}
+                    handleBack={handleBack}
+                    mediaObject={{mediaUrls: imageUrls, audioUrl: generatedAudioPath || ""}}
+                  />
+                </div>
+                )}
+              
+              <div className="flex items-center justify-end mt-4">
+                <Button
+                  onClick={handleSaveToWorkspace}
+                  size="sm"
+                >
+                  <FolderOpen className="mr-2 h-4 w-4" />
+                  {currentWorkspaceId ? "Save Progess" : "Save To New Workspace"}
+                </Button>
+              </div>
+            </>
           )}
-          
-          {currentStep === 4 && (
-            <ImageCreation 
-              selectedVoice={selectedVoice}
-              handleBack={handleBack}
-              handleSelectVoice={handleSelectVoice}
-              handleCreateVideo={handleCreateVideo}
-              script={script}
-              imageUrls={imageUrls}
-              sessionId={sessionId}
-            />
-          )}
-          
-          {currentStep === 5 && (
-            <CreativeEditor
-              downloadProgress={downloadProgress}
-              handleBack={handleBack}
-              mediaObject={{mediaUrls: imageUrls, audioUrl: ""}} // Changed from videoPath
-            />
-          )}
-          
         </div>
       </main>
     </div>

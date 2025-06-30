@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, Volume2, UploadCloud, RefreshCw, Pause } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Volume2, UploadCloud, RefreshCw, Pause } from "lucide-react";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -33,6 +33,7 @@ interface CloneVoiceRequest {
 }
 
 interface VoiceCustomizationProps {
+  generatedAudioPath?: string;
   script: string;
   handleBack: () => void;
   tab: "google" | "elevenlabs";
@@ -43,9 +44,11 @@ interface VoiceCustomizationProps {
   setElevenLabsClonedVoice: React.Dispatch<React.SetStateAction<ElevenLabsClonedVoice>>;
   handleGenerateAudio: () => void;
   isGeneratingAudio: boolean;
+  handleNextStep?: () => void;
 }
 
 export function VoiceCustomization({
+  generatedAudioPath,
   script,
   handleBack,
   tab,
@@ -56,6 +59,7 @@ export function VoiceCustomization({
   setElevenLabsClonedVoice,
   handleGenerateAudio,
   isGeneratingAudio,
+  handleNextStep,
 }: VoiceCustomizationProps) {
   const { user } = useAuth();
   const { useGetVoices, cloneVoice, deleteVoice } = useVoice();
@@ -490,29 +494,45 @@ export function VoiceCustomization({
             )}
           </TabsContent>
         </Tabs>
+        <div className="pt-6">
+          <Button
+            onClick={handleGenerateAudio}
+            disabled={
+              (tab === "google" && !googleCloudVoice.name) ||
+              (tab === "elevenlabs" && elevenLabsClonedVoice.state !== "ready") ||
+              isGeneratingAudio
+            }
+            className="w-full"
+          >
+            {isGeneratingAudio ? (
+              <>
+                <RefreshCw className="animate-spin mr-2 h-4 w-4" /> Generating Audio...
+              </>
+            ) : (
+              <>
+                Generate Audio & Continue <Check className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={handleBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-        <Button
-          onClick={handleGenerateAudio}
-          disabled={
-            (tab === "google" && !googleCloudVoice.name) ||
-            (tab === "elevenlabs" && elevenLabsClonedVoice.state !== "ready") ||
-            isGeneratingAudio
+        <div className="flex justify-between w-full">
+          <Button variant="outline" onClick={handleBack} disabled={isGeneratingAudio}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          </Button>
+          {
+            generatedAudioPath && (
+              <Button
+                onClick={handleNextStep}
+                disabled={!generatedAudioPath || isGeneratingAudio}
+                variant="outline"
+              >
+                Next <ArrowRight className="h-4 w-4" />
+              </Button>
+            )
           }
-        >
-          {isGeneratingAudio ? (
-            <>
-              <RefreshCw className="animate-spin mr-2 h-4 w-4" /> Generating Audio...
-            </>
-          ) : (
-            <>
-              Generate Audio & Continue <Check className="ml-2 h-4 w-4" />
-            </>
-          )}
-        </Button>
+        </div>
       </CardFooter>
     </Card>
   );

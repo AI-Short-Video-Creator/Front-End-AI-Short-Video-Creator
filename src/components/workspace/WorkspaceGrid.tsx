@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { WorkspaceCard } from "./WorkspaceCard";
 import { WorkspaceListItem } from "@/types/workspace";
-import { Search, Plus, Filter, SortAsc, Copy } from "lucide-react";
+import { Search, Plus, Filter, SortAsc, Copy, RefreshCw } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -43,6 +43,7 @@ interface WorkspaceGridProps {
   totalItems: number;
   itemsPerPage: number;
   onPageChange: (page: number) => void;
+  isCreatingWorkspace?: boolean;
 }
 
 export function WorkspaceGrid({
@@ -58,6 +59,7 @@ export function WorkspaceGrid({
   totalItems,
   itemsPerPage,
   onPageChange,
+  isCreatingWorkspace,
 }: WorkspaceGridProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"created" | "updated" | "name">("updated");
@@ -313,6 +315,7 @@ export function WorkspaceGrid({
             <Label htmlFor="workspace-name">Workspace Name</Label>
             <Input
               id="workspace-name"
+              required
               value={createNewDialog.name}
               onChange={(e) => setCreateNewDialog({ ...createNewDialog, name: e.target.value })}
               placeholder="Enter workspace name..."
@@ -339,12 +342,14 @@ export function WorkspaceGrid({
             <Button
               onClick={() => {
                 onCreateNew(createNewDialog.name, createNewDialog.description);
-                setCreateNewDialog({ isOpen: false, name: "", description: "" });
               }}
-              disabled={!createNewDialog.name.trim()}
+              disabled={!createNewDialog.name.trim() || isCreatingWorkspace}
               className="bg-creative-500 hover:bg-creative-600"
             >
               Create Workspace
+              {isCreatingWorkspace && (
+                <RefreshCw className="animate-spin mr-2 h-4 w-4" />
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

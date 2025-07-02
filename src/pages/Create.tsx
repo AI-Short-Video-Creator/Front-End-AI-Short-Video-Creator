@@ -18,7 +18,11 @@ import useWorkspace from "@/hooks/data/useWorkspace"
 import { readTextFromFile } from "@/helpers/readScriptFromFile"
 import { WorkspaceData, CreateWorkspaceRequest } from "@/types/workspace"
 import { Button } from "@/components/ui/button"
-import { FolderOpen } from "lucide-react"
+import { FolderOpen, RefreshCw } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { set } from "date-fns";
 
 export default function Create() {
   const totalSteps = 5;
@@ -30,12 +34,17 @@ export default function Create() {
   // const { deleteVoice } = useVoice();
   const { createImagetAsync, isCreatingImage } = useImage();
   const { createVideoAsync, isCreatingVideo } = useVideo();
-  const { createWorkspace, updateWorkspace, useGetWorkspace } = useWorkspace();
+  const { createWorkspace, isCreatingWorkspace, updateWorkspace, useGetWorkspace } = useWorkspace();
   const { toast } = useToast();
 
   // Workspace state
   const [currentWorkspaceId, setCurrentWorkspaceId] = React.useState<string | null>(null);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = React.useState(false);
+  const [createNewDialog, setCreateNewDialog] = React.useState < {
+    isOpen: boolean;
+    name: string;
+    description: string;
+  }>({ isOpen: false, name: "", description: "" });
 
   // Get workspace data if editing existing workspace
   const { data: workspaceData, isLoading: isLoadingWorkspaceData } = useGetWorkspace(
@@ -302,12 +311,12 @@ export default function Create() {
     try {
       const currentWorkspace = workspaceData;
       const workspaceName = currentWorkspaceId ? 
-        currentWorkspace?.name || `Project ${new Date().toLocaleDateString()}` : 
-        `Project ${new Date().toLocaleDateString()}`;
+        currentWorkspace?.name : 
+        createNewDialog.name.trim();
       
       const workspaceRequestData: CreateWorkspaceRequest = {
         name: workspaceName,
-        description: `Video project for keyword: ${keyword.trim()}`,
+        description: currentWorkspaceId ? workspaceData?.description : createNewDialog.description.trim(),
         keyword: keyword.trim(),
         personalStyle: {
           style: personalStyle.style || "informative",
@@ -361,7 +370,8 @@ export default function Create() {
       } else {
         // Create new workspace
         const result = await createWorkspace(workspaceRequestData);
-        setCurrentWorkspaceId(result.id);
+        setCreateNewDialog({ isOpen: false, name: "", description: "" });
+        navigate(`/create?workspace=${result.id}`);
       }
     } catch (error) {
       console.error("Failed to save workspace:", error);
@@ -470,13 +480,67 @@ export default function Create() {
               
               <div className="flex items-center justify-end mt-4">
                 <Button
-                  onClick={handleSaveToWorkspace}
+                  onClick={currentWorkspaceId ? handleSaveToWorkspace : () => setCreateNewDialog({ ...createNewDialog, isOpen: true })}
                   size="sm"
                 >
                   <FolderOpen className="mr-2 h-4 w-4" />
                   {currentWorkspaceId ? "Save Progess" : "Save To New Workspace"}
                 </Button>
               </div>
+              
+              {/* Create New Workspace Dialog */}
+              <Dialog open={createNewDialog.isOpen} onOpenChange={(open) => 
+                setCreateNewDialog({ ...createNewDialog, isOpen: open })
+              }>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Workspace</DialogTitle>
+                    <DialogDescription>
+                      Start a new video project to organize your media and edits.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <Label htmlFor="workspace-name">Workspace Name</Label>
+                    <Input
+                      id="workspace-name"
+                      required
+                      value={createNewDialog.name}
+                      onChange={(e) => setCreateNewDialog({ ...createNewDialog, name: e.target.value })}
+                      placeholder="Enter workspace name..."
+                      className="mt-2"
+                    />
+                  </div>
+                  <div className="py-4">
+                    <Label htmlFor="workspace-description">Description</Label>
+                    <Input
+                      id="workspace-description"
+                      value={createNewDialog.description}
+                      onChange={(e) => setCreateNewDialog({ ...createNewDialog, description: e.target.value })}
+                      placeholder="Enter workspace description..."
+                      className="mt-2"
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        handleSaveToWorkspace();
+                      }}
+                      disabled={!createNewDialog.name.trim() || isCreatingWorkspace}
+                      className="bg-creative-500 hover:bg-creative-600"
+                    >
+                      Create Workspace
+                      {isCreatingWorkspace && (
+                        <RefreshCw className="ml-2 animate-spin h-4 w-4" />
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </>
           )}
         </div>

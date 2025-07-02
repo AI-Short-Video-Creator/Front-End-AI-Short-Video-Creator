@@ -114,6 +114,7 @@ export default function Workspace() {
           totalItems={workspaceResponse?.total ?? 0}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
+          isCreatingWorkspace={isCreatingWorkspace}
         />
 
         {/* Delete Confirmation Dialog */}

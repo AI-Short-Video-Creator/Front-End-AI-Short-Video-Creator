@@ -19,24 +19,28 @@ import {
 interface VideoCardProps extends React.HTMLAttributes<HTMLDivElement> {
     title: string
     thumbnail?: string
-    duration?: string
     date?: string
     sharedOn?: {
         facebook?: boolean;
         youtube?: boolean;
         tiktok?: boolean;
     };
+    link?: {
+        facebook?: string;
+        youtube?: string;
+        tiktok?: string;
+    };
     onPlay?: () => void
     onDelete?: () => void
     onShare?: () => void
     onAnalytics?: () => void
     onDownload?: () => void
+    videoUrl?: string
 }
 
 export function VideoCard({
     title,
     thumbnail,
-    duration,
     date,
     onPlay,
     onDelete,
@@ -44,6 +48,8 @@ export function VideoCard({
     onAnalytics,
     onDownload,
     sharedOn,
+    link,
+    videoUrl,
     className,
     ...props
 }: VideoCardProps) {
@@ -56,16 +62,21 @@ export function VideoCard({
             {...props}
         >
             <div className="relative video-container-social bg-gray-100">
-                {thumbnail ? (
+                {videoUrl ? (
+                    <video
+                        src={videoUrl}
+                        controls
+                        className="w-full h-full object-cover rounded"
+                        poster={thumbnail}
+                        style={{ aspectRatio: "16/9", minHeight: 120 }}
+                    />
+                ) : (
                     <img
                         src={thumbnail}
                         alt={title}
-                        className="w-full h-full object-cover aspect-video"
+                        className="w-full h-full object-cover rounded"
+                        style={{ aspectRatio: "16/9", minHeight: 120 }}
                     />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-creative-50 aspect-video">
-                        <span className="text-creative-300">No Preview</span>
-                    </div>
                 )}
 
                 <DropdownMenu>
@@ -79,10 +90,6 @@ export function VideoCard({
                             <Share2 className="mr-2 h-4 w-4" />
                             <span>Share</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={onDownload}>
-                            <Download className="mr-2 h-4 w-4" />
-                            <span>Download</span>
-                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -90,20 +97,6 @@ export function VideoCard({
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-
-                {duration && (
-                    <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                        {duration}
-                    </div>
-                )}
-                <Button
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/30 hover:bg-black/50 h-10 w-10"
-                    size="icon"
-                    variant="ghost"
-                    onClick={onPlay}
-                >
-                    <Play fill="white" className="ml-0.5" />
-                </Button>
             </div>
             <CardContent className="p-3">
                 <h3 className="font-medium text-sm truncate mb-1 text-black dark:text-white">{title}</h3>
@@ -112,12 +105,12 @@ export function VideoCard({
                     <div className="flex items-center gap-2 mt-2">
                         <span className="text-xs text-muted-foreground">Shared on:</span>
                         <div className="flex items-center gap-1.5">
-                            {sharedOn.facebook && (
+                            {sharedOn.facebook && link?.facebook && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <button
                                             type="button"
-                                            onClick={() => window.open(`https://www.facebook.com/`, "_blank")}
+                                            onClick={() => window.open(link.facebook, "_blank")}
                                             className="p-0 bg-transparent border-none flex items-center gap-1"
                                             aria-label="Open Facebook"
                                         >
@@ -128,7 +121,7 @@ export function VideoCard({
                                             />
                                             <img
                                                 src="/logos/insert_link.png"
-                                                alt="YouTube"
+                                                alt="Link"
                                                 className="h-4 w-4"
                                             />
                                         </button>
@@ -138,12 +131,12 @@ export function VideoCard({
                                     </TooltipContent>
                                 </Tooltip>
                             )}
-                            {sharedOn.youtube && (
+                            {sharedOn.youtube && link?.youtube && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <button
                                             type="button"
-                                            onClick={() => window.open(`https://www.youtube.com/`, "_blank")}
+                                            onClick={() => window.open(link.youtube, "_blank")}
                                             className="p-0 bg-transparent border-none flex items-center gap-1"
                                             aria-label="Open YouTube"
                                         >
@@ -154,7 +147,7 @@ export function VideoCard({
                                             />
                                             <img
                                                 src="/logos/insert_link.png"
-                                                alt="YouTube"
+                                                alt="Link"
                                                 className="h-4 w-4"
                                             />
                                         </button>
@@ -164,12 +157,12 @@ export function VideoCard({
                                     </TooltipContent>
                                 </Tooltip>
                             )}
-                            {sharedOn.tiktok && (
+                            {sharedOn.tiktok && link?.tiktok && (
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <button
                                             type="button"
-                                            onClick={() => window.open(`https://www.tiktok.com/`, "_blank")}
+                                            onClick={() => window.open(link.tiktok, "_blank")}
                                             className="p-0 bg-transparent border-none flex items-center gap-1"
                                             aria-label="Open TikTok"
                                         >
@@ -180,7 +173,7 @@ export function VideoCard({
                                             />
                                             <img
                                                 src="/logos/insert_link.png"
-                                                alt="YouTube"
+                                                alt="Link"
                                                 className="h-4 w-4"
                                             />
                                         </button>

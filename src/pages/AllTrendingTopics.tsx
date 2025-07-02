@@ -12,7 +12,7 @@ export default function AllTrendingTopics() {
   const [filteredTopics, setFilteredTopics] = React.useState([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
-  const API_TRENDING_URL = import.meta.env.VITE_API_TRENDING_URL;
+  const API_TRENDING_URL = import.meta.env.VITE_PUBLIC_API_URL+ "/trending/google";
 
   // Fetch API data on mount
   React.useEffect(() => {

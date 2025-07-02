@@ -16,7 +16,25 @@ interface PlatformConnectCardProps {
   userAvatar?: string;
 }
 
-export function PlatformConnectCard({ platformName, Icon, isConnected, onConnect, onDisconnect, iconColorClassName, views, userName, userAvatar }: PlatformConnectCardProps) {
+export function PlatformConnectCard({
+  platformName,
+  Icon,
+  isConnected,
+  onConnect,
+  onDisconnect,
+  iconColorClassName,
+  views,
+  userName,
+  userAvatar,
+}: PlatformConnectCardProps) {
+  // Hardcoded page/channel info
+  let extraInfo: string | undefined;
+  if (platformName.toLowerCase() === "facebook") {
+    extraInfo = "Page: Creator AI Video";
+  } else if (platformName.toLowerCase() === "youtube") {
+    extraInfo = "Channel: QuickClip Creator";
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -39,15 +57,18 @@ export function PlatformConnectCard({ platformName, Icon, isConnected, onConnect
             </Avatar>
             <div>
               <p className="font-semibold text-sm">{userName}</p>
-                {views !== undefined ? (
+              {extraInfo && (
+                <p className="text-xs text-muted-foreground">{extraInfo}</p>
+              )}
+              {views !== undefined ? (
                 <p className="text-xs text-muted-foreground">{views.toLocaleString()} views</p>
-                ) : (
-                <p className="text-xs text-muted-foreground">Connected</p>
-                )}
-              </div>
-              </div>
-            ) : (
-              <>
+              ) : (
+                <p className="text-xs text-muted-foreground">Connecting...</p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
             <div className="text-xs text-muted-foreground mb-3">
               {isConnected ? `Connected to ${platformName}.` : `Not connected.`}
             </div>

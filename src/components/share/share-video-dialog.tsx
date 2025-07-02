@@ -16,12 +16,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { ShareVideoPreview } from "@/components/share/share-video-preview"
 import { Facebook, Youtube, Music } from "lucide-react"
 import { toast } from "sonner"
+import { postVideoToPageWithThumbnail } from "@/lib/facebook-insights";
+import { uploadVideoToYouTubeViaBackend } from "@/lib/youtube-insights";
+import { uploadVideoToTiktokByUrl } from "@/lib/tiktok-insights";
+const API_CAPTION_URL = import.meta.env.VITE_PUBLIC_API_URL + "/caption/social" as string;
 
 interface ShareVideoDialogProps {
   video: {
     id: string;
     title: string
     thumbnail?: string
+    videoUrl?: string
   }
   connections: {
     facebook: boolean
@@ -41,14 +46,18 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
     youtube: connections.youtube,
     tiktok: connections.tiktok,
   })
+  const [sharing, setSharing] = React.useState(false);
+  const [statusText, setStatusText] = React.useState<string | null>(null);
+  const [generatingCaption, setGeneratingCaption] = React.useState(false);
+  const [language, setLanguage] = React.useState("en");
 
   React.useEffect(() => {
     setTitle(video.title);
     setDescription("");
     setPlatforms({
-        facebook: connections.facebook,
-        youtube: connections.youtube,
-        tiktok: connections.tiktok,
+      facebook: connections.facebook,
+      youtube: connections.youtube,
+      tiktok: connections.tiktok,
     })
   }, [video, connections])
 
@@ -56,14 +65,129 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
     setPlatforms((prev) => ({ ...prev, [platform]: checked }))
   }
 
-  const handleQuickShare = () => {
-    onConfirmShare(video.id, platforms)
+  const handleQuickShare = async () => {
+    setSharing(true);
+    try {
+
+      const VITE_PUBLIC_API_URL = import.meta.env.VITE_PUBLIC_API_URL;
+
+      // Helper to update social link in backend
+      const updateSocialLink = async (platform: string, link: string) => {
+        try {
+          await fetch(`${VITE_PUBLIC_API_URL}/social/share`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: video.id,
+              platform,
+              link,
+            }),
+          });
+        } catch (err) {
+          console.error(`Failed to update ${platform} link:`, err);
+          return;
+        }
+      };
+
+      // Facebook
+      if (platforms.facebook) {
+        if (!video.videoUrl) {
+          toast.error("No video URL found for sharing to Facebook.");
+        }
+        try {
+          const fbRes = await postVideoToPageWithThumbnail(video.videoUrl, title, description, video.thumbnail);
+          toast.success("Video shared to Facebook page successfully!");
+          let fbLink = "";
+          if (fbRes && typeof fbRes === "object" && fbRes.permalink_url) {
+            fbLink = fbRes.permalink_url;
+          } else if (fbRes && typeof fbRes === "string") {
+            fbLink = fbRes;
+          }
+          if (fbLink) {
+            await updateSocialLink("facebook", fbLink);
+          }
+        } catch (err: any) {
+          toast.error("Failed to share video to Facebook page.");
+          return;
+        }
+      }
+
+      // YouTube
+      if (platforms.youtube) {
+        if (!video.videoUrl) {
+          toast.error("No video URL found for sharing to Youtube.");
+        }
+        try {
+          const ytRes = await uploadVideoToYouTubeViaBackend(video.videoUrl, title, description, video.thumbnail);
+          toast.success("Video shared to Youtube channel successfully!");
+          let ytLink = "";
+          if (ytRes && typeof ytRes === "object" && ytRes.videoUrl) {
+            ytLink = ytRes.videoUrl;
+          } else if (ytRes && typeof ytRes === "string") {
+            ytLink = ytRes;
+          }
+          if (ytLink) {
+            await updateSocialLink("youtube", ytLink);
+          }
+        } catch (err: any) {
+          toast.error("Failed to share video to Youtube channel.");
+          return;
+        }
+      }
+
+      // TikTok
+      if (platforms.tiktok) {
+        if (!video.videoUrl) {
+          toast.error("No video URL found for sharing to TikTok.");
+        }
+        try {
+          const tiktokRes = await uploadVideoToTiktokByUrl(video.videoUrl, title, description);
+          toast.success("Video shared to TikTok successfully!");
+          let tiktokLink = "";
+          if (tiktokRes && typeof tiktokRes === "object" && tiktokRes.publish_id) {
+            tiktokLink = "https://www.tiktok.com/@kaytlyntruong28/video/" + tiktokRes.publish_id;
+          } else if (tiktokRes && typeof tiktokRes === "string") {
+            tiktokLink = tiktokRes;
+          }
+          if (tiktokLink) {
+            await updateSocialLink("tiktok", tiktokLink);
+          }
+        } catch (err: any) {
+          toast.error("Failed to share video to TikTok.");
+          return;
+        }
+      }
+      
+      onConfirmShare(video.id, platforms);
+
+      setSharing(false);
+      onOpenChange(false); // Đóng dialog
+    } catch (err) {
+      setSharing(false);
+      // Không đóng popup
+    }
   }
 
-  const handleAutoCaption = () => {
-    console.log("Generating auto captions...")
-    setDescription("This is an auto-generated description for the video.")
-    toast.info("Auto captions generated.")
+  const handleAutoCaption = async () => {
+    setGeneratingCaption(true);
+    try {
+      setStatusText(null);
+      const url = `${API_CAPTION_URL}?video_context=${encodeURIComponent(title)}&lang=${language}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) throw new Error("Failed to fetch caption");
+      const data = await res.json();
+      if (data.title) setTitle(data.title);
+      if (data.caption) setDescription(data.caption);
+      toast.success("Auto captions generated.");
+    } catch (err) {
+      toast.error("Auto caption error.");
+      console.error("Auto caption error:", err);
+    } finally {
+      setGeneratingCaption(false);
+    }
   }
 
   return (
@@ -75,39 +199,39 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
             Edit details and select platforms to share your video.
           </DialogDescription>
         </DialogHeader>
-        
+
         {/* Platform Selectors */}
         <div className="space-y-3 py-4">
-            <Label className="font-semibold">Select platforms</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {connections.facebook && (
-          <div>
-            <Checkbox id="facebook" checked={platforms.facebook} onCheckedChange={(checked) => handlePlatformChange("facebook", !!checked)} className="peer sr-only" />
-            <Label htmlFor="facebook" className="flex flex-col h-full items-center justify-center gap-2 cursor-pointer rounded-lg border-2 border-muted bg-transparent p-4 transition-colors hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
-              <img src="/logos/facebook.png" alt="Facebook" className="h-6 w-6" />
-              <span className="text-sm font-medium">Facebook</span>
-            </Label>
+          <Label className="font-semibold">Select platforms</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {connections.facebook && (
+              <div>
+                <Checkbox id="facebook" checked={platforms.facebook} onCheckedChange={(checked) => handlePlatformChange("facebook", !!checked)} className="peer sr-only" />
+                <Label htmlFor="facebook" className="flex flex-col h-full items-center justify-center gap-2 cursor-pointer rounded-lg border-2 border-muted bg-transparent p-4 transition-colors hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
+                  <img src="/logos/facebook.png" alt="Facebook" className="h-6 w-6" />
+                  <span className="text-sm font-medium">Facebook</span>
+                </Label>
+              </div>
+            )}
+            {connections.youtube && (
+              <div>
+                <Checkbox id="youtube" checked={platforms.youtube} onCheckedChange={(checked) => handlePlatformChange("youtube", !!checked)} className="peer sr-only" />
+                <Label htmlFor="youtube" className="flex flex-col h-full items-center justify-center gap-2 cursor-pointer rounded-lg border-2 border-muted bg-transparent p-4 transition-colors hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
+                  <img src="/logos/youtube.png" alt="YouTube" className="h-6 w-6" />
+                  <span className="text-sm font-medium">YouTube</span>
+                </Label>
+              </div>
+            )}
+            {connections.tiktok && (
+              <div>
+                <Checkbox id="tiktok" checked={platforms.tiktok} onCheckedChange={(checked) => handlePlatformChange("tiktok", !!checked)} className="peer sr-only" />
+                <Label htmlFor="tiktok" className="flex flex-col h-full items-center justify-center gap-2 cursor-pointer rounded-lg border-2 border-muted bg-transparent p-4 transition-colors hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
+                  <img src="/logos/tiktok.png" alt="TikTok" className="h-6 w-6 inline-flex items-center justify-center h-5 w-5 rounded bg-white" />
+                  <span className="text-sm font-medium">TikTok</span>
+                </Label>
+              </div>
+            )}
           </div>
-              )}
-              {connections.youtube && (
-          <div>
-            <Checkbox id="youtube" checked={platforms.youtube} onCheckedChange={(checked) => handlePlatformChange("youtube", !!checked)} className="peer sr-only" />
-            <Label htmlFor="youtube" className="flex flex-col h-full items-center justify-center gap-2 cursor-pointer rounded-lg border-2 border-muted bg-transparent p-4 transition-colors hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
-              <img src="/logos/youtube.png" alt="YouTube" className="h-6 w-6" />
-              <span className="text-sm font-medium">YouTube</span>
-            </Label>
-          </div>
-              )}
-              {connections.tiktok && (
-          <div>
-            <Checkbox id="tiktok" checked={platforms.tiktok} onCheckedChange={(checked) => handlePlatformChange("tiktok", !!checked)} className="peer sr-only" />
-            <Label htmlFor="tiktok" className="flex flex-col h-full items-center justify-center gap-2 cursor-pointer rounded-lg border-2 border-muted bg-transparent p-4 transition-colors hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground">
-              <img src="/logos/tiktok.png" alt="TikTok" className="h-6 w-6 inline-flex items-center justify-center h-5 w-5 rounded bg-white" />
-              <span className="text-sm font-medium">TikTok</span>
-            </Label>
-          </div>
-              )}
-            </div>
         </div>
 
         {/* Main Content Grid */}
@@ -133,16 +257,59 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
           </div>
         </div>
 
-        <DialogFooter className="pt-4 sm:justify-between">
-          <Button variant="outline" onClick={handleAutoCaption} className="mt-2 w-full sm:mt-0 sm:w-auto">Generate auto captions</Button>
-          <div className="flex w-full flex-col-reverse gap-2 sm:w-auto sm:flex-row sm:justify-end">
+        {statusText && (
+          <div className="text-center text-primary font-semibold py-2">{statusText}</div>
+        )}
+
+        <DialogFooter className="pt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          {/* Left side: Auto caption & language */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              variant="outline"
+              onClick={handleAutoCaption}
+              className="w-full sm:w-auto"
+              disabled={sharing || generatingCaption}
+            >
+              {generatingCaption ? "Generating..." : "Generate auto captions"}
+            </Button>
+            {/* Language Selector */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="language" className="font-semibold">Language</Label>
+              <select
+                id="language"
+                className="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-black text-white"
+                value={language}
+                onChange={e => setLanguage(e.target.value)}
+              >
+                <option value="en">English</option>
+                <option value="vi">Vietnamese</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+                <option value="de">German</option>
+                <option value="ru">Russian</option>
+              </select>
+            </div>
+          </div>
+          {/* Right side: Action buttons */}
+          <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-row sm:justify-end">
             <DialogClose asChild>
-              <Button variant="ghost" className="w-full sm:w-auto">Cancel</Button>
+              <Button variant="ghost" className="w-full sm:w-auto">
+          Cancel
+              </Button>
             </DialogClose>
-            <Button onClick={handleQuickShare} className="w-full sm:w-auto">Share now</Button>
+            <Button
+              onClick={handleQuickShare}
+              className="w-full sm:w-auto"
+              disabled={sharing || generatingCaption}
+            >
+              {sharing ? "Sharing..." : "Share now"}
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

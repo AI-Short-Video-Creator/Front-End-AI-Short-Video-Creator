@@ -2,25 +2,39 @@ import * as React from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { RefreshCw } from "lucide-react"
-import useScript from "@/hooks/data/useScript"
+import useScript, { PersonalStyle } from "@/hooks/data/useScript"
 import { useToast } from "@/hooks/use-toast"
 import { LoadingSpinner } from "../Loading"
-import { ScriptCreationArgs } from "../create/ScriptCreation"
 
 interface ScriptEditorProps {
   initialContent?: string
   onSave?: (content: string) => void
-  args: ScriptCreationArgs
+  args?: {
+    keyword?: string,
+    personalStyle?: PersonalStyle
+  }
+  canRegenerate?: boolean
 }
 
-export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditorProps) {
+export function ScriptEditor({ initialContent = "", onSave, args, canRegenerate }: ScriptEditorProps) {
   const [content, setContent] = React.useState(initialContent)
   const { createScriptAsync, isCreatingScript } = useScript()
   const { toast } = useToast()
 
   const handleGenerate = async () => {
+    console.log("Can regenerate:", canRegenerate)
+
     const script = await createScriptAsync({
-      ...args,
+      keyword: args?.keyword || "",
+      personalStyle: args?.personalStyle || {
+        style: "informative",
+        language: "en",
+        wordCount: 100,
+        tone: "neutral",
+        perspective: "third",
+        humor: "none",
+        quotes: "no",
+      }
     })
 
     if (script.data) {
@@ -45,9 +59,9 @@ export function ScriptEditor({ initialContent = "", onSave, args }: ScriptEditor
         <Button
           variant="outline"
           size="sm"
-          className="gap-2"
+          className="gap-2 min-w-[120px]"
           onClick={handleGenerate}
-          disabled={isCreatingScript}
+          disabled={isCreatingScript || !canRegenerate}
         >
           <RefreshCw className="h-4 w-4" />
           {isCreatingScript ? <LoadingSpinner/> : "Regenerate"}

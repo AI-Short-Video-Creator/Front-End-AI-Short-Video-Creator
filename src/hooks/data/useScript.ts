@@ -4,9 +4,17 @@ import axiosInstance from "@/config";
 
 export type CreateScriptRequest = {
     keyword: string;
-    style?: string;
-    language?: string;
-    wordCount?: number;
+    personalStyle: PersonalStyle;
+}
+
+export type PersonalStyle = {
+    style: string;
+    language: string;
+    wordCount: number;
+    tone: string;
+    perspective: string;
+    humor: string;
+    quotes: string;
 }
 
 const useScript = () => {
@@ -15,9 +23,13 @@ const useScript = () => {
         mutationFn: async (data: CreateScriptRequest) => {
             const res = await axiosInstance.post("/script/", {
                 keyword: data.keyword,
-                style: data.style,
-                language: data.language,
-                wordCount: data.wordCount,
+                style: data.personalStyle.style,
+                language: data.personalStyle.language,
+                wordCount: data.personalStyle.wordCount,
+                tone: data.personalStyle.tone,
+                perspective: data.personalStyle.perspective,
+                humor: data.personalStyle.humor,
+                quotes: data.personalStyle.quotes,
             });
             return res.data;
         },

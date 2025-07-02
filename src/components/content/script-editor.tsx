@@ -74,7 +74,7 @@ export function ScriptEditor({ initialContent = "", onSave, args, canRegenerate 
         onChange={(e) => setContent(e.target.value)}
       />
       <div className="flex justify-end">
-        <Button onClick={handleSave}>Save Script</Button>
+        <Button onClick={handleSave}>Save Script And Generate Images</Button>
       </div>
     </div>
   )

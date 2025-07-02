@@ -25,7 +25,7 @@ export type SynthesisRequest = GCTTSRequest | ElevenLabsRequest;
 
 export type SynthesisResponse = {
     message: string;
-    audio_path: string;
+    audio_url: string;
     filename: string;
     voice_used: string;
 }

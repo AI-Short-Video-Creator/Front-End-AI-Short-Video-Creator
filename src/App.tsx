@@ -16,6 +16,7 @@ import { ThemeProvider } from "./lib/theme";
 import AuthShield from "./components/auth/AuthShield";
 import Share from "./pages/Share";
 import Analytics from "./pages/Analytics";
+import Workspace from "./pages/Workspace";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/settings" element={<Settings />} />
               <Route path="/share" element={<Share />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/workspace" element={<Workspace />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

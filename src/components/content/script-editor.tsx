@@ -9,6 +9,7 @@ import { LoadingSpinner } from "../Loading"
 interface ScriptEditorProps {
   initialContent?: string
   onSave?: (content: string) => void
+  isCreatingImage?: boolean
   args?: {
     keyword?: string,
     personalStyle?: PersonalStyle
@@ -16,7 +17,7 @@ interface ScriptEditorProps {
   canRegenerate?: boolean
 }
 
-export function ScriptEditor({ initialContent = "", onSave, args, canRegenerate }: ScriptEditorProps) {
+export function ScriptEditor({ initialContent = "", onSave, args, canRegenerate, isCreatingImage }: ScriptEditorProps) {
   const [content, setContent] = React.useState(initialContent)
   const { createScriptAsync, isCreatingScript } = useScript()
   const { toast } = useToast()
@@ -74,7 +75,19 @@ export function ScriptEditor({ initialContent = "", onSave, args, canRegenerate 
         onChange={(e) => setContent(e.target.value)}
       />
       <div className="flex justify-end">
-        <Button onClick={handleSave}>Save Script And Generate Images</Button>
+        <Button
+          onClick={handleSave}
+          disabled={!content.trim() || isCreatingImage}
+          className="min-w-[250px]"
+        >
+          {isCreatingImage ? (
+        <span className="flex items-center justify-center w-full">
+          <LoadingSpinner />
+        </span>
+          ) : (
+        "Save Script And Generate Images"
+          )}
+        </Button>
       </div>
     </div>
   )

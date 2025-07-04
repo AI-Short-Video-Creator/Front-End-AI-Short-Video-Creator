@@ -10,6 +10,7 @@ interface ScriptCreationProps {
   script: string;
   handleBack: () => void;
   handleSaveScript: (content: string) => void;
+  isCreatingImage?: boolean;
   keyword?: string;
   personalStyle?: PersonalStyle;
   canRegenerate?: boolean;
@@ -21,6 +22,7 @@ export function ScriptCreation({
   script,
   handleBack,
   handleSaveScript,
+  isCreatingImage,
   keyword,
   personalStyle,
   canRegenerate = true,
@@ -38,6 +40,7 @@ export function ScriptCreation({
         <ScriptEditor 
           initialContent={script} 
           onSave={handleSaveScript}
+          isCreatingImage={isCreatingImage}
           args={{
             keyword,
             personalStyle,

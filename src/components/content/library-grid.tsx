@@ -62,8 +62,8 @@ export function LibraryGrid({ search }: LibraryGridProps) {
             title={video.title}
             thumbnail={video.thumbnail}
             date={formatDate(video.date || new Date(), "PPpp")}
-            duration={video.duration}
             onDelete={() => handleDeleteClick(video.id)}
+            videoUrl={video.video_path}
           />
         ))}
       </div>

@@ -86,11 +86,15 @@ export function VideoCard({
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={onShare}>
-                            <Share2 className="mr-2 h-4 w-4" />
-                            <span>Share</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        {onShare && (
+                            <DropdownMenuItem onClick={onShare}>
+                                <Share2 className="mr-2 h-4 w-4" />
+                                <span>Share</span>
+                            </DropdownMenuItem>
+                        )}
+                        {onShare && (
+                            <DropdownMenuSeparator />
+                        )}
                         <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Delete</span>

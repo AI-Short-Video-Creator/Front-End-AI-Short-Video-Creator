@@ -47,7 +47,26 @@ const useScript = () => {
         },
     });
 
-    return { isCreatedScript, createScriptAsync, isCreatingScript };
+    const { isSuccess: isFormattedScript, mutateAsync: formatScriptAsync, isPending: isFormattingScript } = useMutation({
+        mutationFn: async (userScript: string) => {
+            const res = await axiosInstance.post("/script/format", { script: userScript });
+            return res.data.data as string;
+        },
+        onSuccess: () => {
+            toast({
+                title: "Format Script",
+                description: "Format Script successfully",
+            });
+        },
+        onError: (error) => {
+            toast({
+                title: "Format Script",
+                description: error.message,
+            });
+        },
+    });
+
+    return { isCreatedScript, createScriptAsync, isCreatingScript, isFormattedScript, formatScriptAsync, isFormattingScript };
 }
 
 export default useScript;

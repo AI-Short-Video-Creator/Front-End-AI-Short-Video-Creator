@@ -29,7 +29,7 @@ export default function Create() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { createScriptAsync, isCreatingScript } = useScript();
+  const { createScriptAsync, isCreatingScript, formatScriptAsync, isFormattingScript } = useScript();
   const { generateAudio, isGeneratingAudio } = useAudioSynthesis();
   // const { deleteVoice } = useVoice();
   const { createImagetAsync, isCreatingImage } = useImage();
@@ -243,10 +243,10 @@ export default function Create() {
 
   const handleImportScript = (file: File) => {
     const content = readTextFromFile(file)
-    content.then(text => {
-      setScript(text)
+    content.then(async text => {
+      const formattedScript = await formatScriptAsync(text);
+      setScript(formattedScript)
       setCanRegenerate(false)
-      console.log("Can regenerate set to false")
       setCurrentStep(2)
     }).catch(error => {
       toast({
@@ -420,6 +420,7 @@ export default function Create() {
                     personalStyle={personalStyle}
                     handleChange={handleChange}
                     handleImportScript={handleImportScript}
+                    isFormattingScript={isFormattingScript}
                     handleNextStep={handleNextStep}
                   />
                 </div>
@@ -433,6 +434,7 @@ export default function Create() {
                     script={script}
                     handleBack={handleBack}
                     handleSaveScript={handleSaveScript}
+                    isCreatingImage={isCreatingImage}
                     personalStyle={personalStyle}
                     canRegenerate={canRegenerate}
                     handleNextStep={handleNextStep}

@@ -86,11 +86,15 @@ export function VideoCard({
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={onShare}>
-                            <Share2 className="mr-2 h-4 w-4" />
-                            <span>Share</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        {onShare && (
+                            <DropdownMenuItem onClick={onShare}>
+                                <Share2 className="mr-2 h-4 w-4" />
+                                <span>Share</span>
+                            </DropdownMenuItem>
+                        )}
+                        {onShare && (
+                            <DropdownMenuSeparator />
+                        )}
                         <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                             <Trash2 className="mr-2 h-4 w-4" />
                             <span>Delete</span>
@@ -169,7 +173,7 @@ export function VideoCard({
                                             <img
                                                 src="/logos/tiktok.png"
                                                 alt="TikTok"
-                                                className="h-4 w-4 inline-flex items-center justify-center h-5 w-5 rounded bg-white"
+                                                className="h-4 w-4 inline-flex items-center justify-center rounded bg-white"
                                             />
                                             <img
                                                 src="/logos/insert_link.png"

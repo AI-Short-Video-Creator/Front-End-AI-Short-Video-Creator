@@ -15,6 +15,7 @@ interface ImageCreationProps {
   imageUrls: ImageInfo[];
   sessionId: string;
   handleNextStep?: () => void;
+  onImageUpdate?: (index: number, newImageData: ImageInfo) => void;
 }
 
 type ImageInfo = {
@@ -33,27 +34,41 @@ export function ImageCreation({
   imageUrls,
   sessionId,
   handleNextStep,
+  onImageUpdate,
 }: ImageCreationProps) {
   const { regenerateImageAsync, isCreatingImage, isRegeneratingImage } = useImage();
   const { toast } = useToast();
   const [images, setImages] = React.useState<ImageInfo[]>(imageUrls);
+  const [regeneratingImages, setRegeneratingImages] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
     setImages(imageUrls);
   }, [imageUrls]);
 
   const handleRegenerateImage = async (imageId: string, index: number) => {
+    // Add imageId to regenerating set
+    setRegeneratingImages(prev => new Set(prev).add(imageId));
+    
     try {
       const response = await regenerateImageAsync({ session_id: sessionId, image_id: imageId });
       if (response) {
-        const newImages = [...images];
-        newImages[index] = {
+        const newImageData = {
           image_id: response.image_id,
           image_url: response.image_url,
           scene: response.scene,
           voice: response.voice,
         };
+        
+        // Update local state
+        const newImages = [...images];
+        newImages[index] = newImageData;
         setImages(newImages);
+        
+        // Notify parent component to update imageUrls
+        if (onImageUpdate) {
+          onImageUpdate(index, newImageData);
+        }
+        
         toast({
           title: "Success",
           description: "Image regenerated successfully.",
@@ -71,20 +86,25 @@ export function ImageCreation({
         description: "Failed to regenerate image.",
         variant: "destructive",
       });
+    } finally {
+      // Remove imageId from regenerating set
+      setRegeneratingImages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(imageId);
+        return newSet;
+      });
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Select Voice & Customize</CardTitle>
-        <CardDescription>Choose a voice for your video and customize settings</CardDescription>
+        <CardTitle>Image Generation</CardTitle>
       </CardHeader>
       <CardContent>
-        <VoiceSelection onSelectVoice={handleSelectVoice} />
         
         <div className="mt-8 border-t pt-6">
-          <h3 className="text-lg font-medium mb-4">Background Options</h3>
+          <h3 className="text-lg font-medium mb-4">Your image</h3>
           <div className="grid grid-cols-4 gap-3">
             {images.map((imgInfo, idx) => (
               <div
@@ -102,9 +122,9 @@ export function ImageCreation({
                     size="sm"
                     className="absolute bottom-2 right-2"
                     onClick={() => handleRegenerateImage(imgInfo.image_id, idx)}
-                    disabled={isCreatingImage || isRegeneratingImage}
+                    disabled={isCreatingImage || regeneratingImages.has(imgInfo.image_id)}
                   >
-                    Regenerate
+                    {regeneratingImages.has(imgInfo.image_id) ? "Regenerating..." : "Regenerate"}
                   </Button>
                 </div>
                 

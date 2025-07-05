@@ -4,7 +4,7 @@ import { Header } from "@/components/navigation/header";
 import { StepIndicator } from "@/components/ui/step-indicator";
 import { TopicSelection } from "@/components/create/TopicSelection";
 import { ScriptCreation } from "@/components/create/ScriptCreation";
-import {ImageCreation} from "@/components/create/ImageCreation";
+import { ImageCreation } from "@/components/create/ImageCreation";
 import { VideoCreator } from "@/components/create/VideoCreator";
 import CreativeEditor from "@/components/create/CreativeEditor";
 import useImage from "@/hooks/data/useImage";
@@ -207,6 +207,12 @@ export default function Create() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleImageUrlUpdate = (index: number, newImageData: any) => {
+    const newImageUrls = [...imageUrls];
+    newImageUrls[index] = newImageData;
+    setImageUrls(newImageUrls);
   };
 
   // const handleCreateVideo = async () => {
@@ -445,6 +451,7 @@ export default function Create() {
                     imageUrls={imageUrls}
                     sessionId={sessionId}
                     handleNextStep={handleNextStep}
+                    onImageUpdate={handleImageUrlUpdate}
                   />
                 </div>
               )}
@@ -469,14 +476,14 @@ export default function Create() {
               )}
 
               {currentStep === 5 && (
-                <div className="space-y-4">
+                <div className="space-y-4 w-full flex justify-center">
                   <CreativeEditor
                     downloadProgress={downloadProgress}
                     handleBack={handleBack}
-                    mediaObject={{mediaUrls: imageUrls, audioUrl: generatedAudioPath || ""}}
+                    mediaObject={{ mediaUrls: imageUrls, audioUrl: generatedAudioPath || "" }}
                   />
                 </div>
-                )}
+              )}
               
               <div className="flex items-center justify-end mt-4">
                 <Button

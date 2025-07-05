@@ -13,6 +13,7 @@ import ImageGeneration from "@imgly/plugin-ai-image-generation-web";
 import { useToast } from "@/hooks/use-toast";
 import { MyImageProvider } from "./MyImageProvider";
 import { ArrowLeft } from "lucide-react";
+import useFile from "@/hooks/data/useFile";
 type mediaInfo = {
   image_id: string;
   image_url: string;
@@ -39,6 +40,7 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
   const [cesdk, setCesdk] = useState<CreativeEditorSDK | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
+  const { uploadVideoAsync, isUploadingVideo } = useFile();
   const isInitialized = useRef(false);
   const containerId = useRef(`cesdk-container-${Date.now()}`); // Unique container ID
 
@@ -129,7 +131,30 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
           callbacks: {
             onUpload: "local",
             onDownload: "download",
-            onExport: "download"
+            onExport: async (file, options) => {
+              // Handle file which may be Blob or Blob[]
+              const exportBlob = file instanceof Blob
+                ? file
+                : new Blob(file, { type: options.mimeType });
+              // Generate dynamic filename with timestamp
+              const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+              const name = `video-export-${timestamp}.mp4`;
+              // Trigger client download
+              const url = URL.createObjectURL(exportBlob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = name;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+              // Upload to backend using custom hook
+              try {
+                await uploadVideoAsync(exportBlob);
+              } catch (e) {
+                console.error('Video upload failed:', e);
+              }
+            },
           },
           ui: {
             elements: {
@@ -245,7 +270,7 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
   };
 
   return (
-    <Card className="w-full h-full">
+    <Card className="mx-auto" style={{ width: "80vw", height: "100%" }}>
       <CardHeader>
         <CardTitle>Video Editor</CardTitle>
       </CardHeader>

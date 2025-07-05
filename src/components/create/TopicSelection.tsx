@@ -21,6 +21,7 @@ interface TopicSelectionProps {
   personalStyle: PersonalStyle;
   handleChange: (field: string, value: any) => void;
   handleImportScript?: (file: File) => void;
+  isFormattingScript?: boolean;
   handleNextStep?: () => void;
 }
 
@@ -34,6 +35,7 @@ export function TopicSelection({
   personalStyle,
   handleChange,
   handleImportScript,
+  isFormattingScript,
   handleNextStep,
 }: TopicSelectionProps) {
   const languages = React.useMemo(() => new LanguageList().getData(), [])
@@ -277,13 +279,22 @@ export function TopicSelection({
                   <div className="text-gray-700 text-sm font-medium mb-2">{uploadedFile.name}</div>
                   <button
                     type="button"
-                    className="inline-flex items-center px-3 py-1 bg-primary text-white rounded hover:bg-primary/90 transition-colors text-sm gap-2"
+                    className="inline-flex items-center justify-center px-3 py-1 bg-primary text-white rounded hover:bg-primary/90 transition-colors text-sm gap-2 w-28"
                     onClick={() => handleImportScript && handleImportScript(uploadedFile)}
+                    disabled={isFormattingScript}
                   >
-                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 10l5-5m0 0l5 5m-5-5v12" />
-                    </svg>
-                    Import
+                    {isFormattingScript ? (
+                      <div className="flex justify-center w-full">
+                        <LoadingSpinner />
+                      </div>
+                    ) : (
+                      <>
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 10l5-5m0 0l5 5m-5-5v12" />
+                        </svg>
+                        <span className="min-w-[60px] text-center">Import</span>
+                      </>
+                    )}
                   </button>
                   <button
                     type="button"

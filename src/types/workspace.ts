@@ -17,7 +17,7 @@ export interface WorkspaceData {
   
   // Step 3: Voice Configuration
   voiceConfig: VoiceConfiguration;
-  generatedAudioPath?: string;
+  generatedAudioPath?: MultiSynthesisResponse;
   
   // Step 4: Image Generation
   imageUrls: MediaInfo[];
@@ -78,7 +78,7 @@ export interface CreateWorkspaceRequest {
   script?: string;
   canRegenerate?: boolean;
   voiceConfig?: VoiceConfiguration;
-  generatedAudioPath?: string;
+  generatedAudioPath?: MultiSynthesisResponse;
   imageUrls?: MediaInfo[];
   sessionId?: string;
   videoUrl?: string;
@@ -96,7 +96,7 @@ export interface UpdateWorkspaceRequest {
   script?: string;
   canRegenerate?: boolean;
   voiceConfig?: VoiceConfiguration;
-  generatedAudioPath?: string;
+  generatedAudioPath?: MultiSynthesisResponse;
   imageUrls?: MediaInfo[];
   sessionId?: string;
   videoUrl?: string;
@@ -124,3 +124,17 @@ export interface WorkspaceApiResponse {
   page: number;
   limit: number;
 }
+
+export type SceneAudioDetail = {
+    scene_index: number;
+    script: string;
+    audio_url: string;
+    duration: number;
+};
+
+export type MultiSynthesisResponse = {
+    message: string;
+    total_scenes: number;
+    voice_used: string;
+    scenes: SceneAudioDetail[];
+};

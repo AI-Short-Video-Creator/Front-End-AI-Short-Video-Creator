@@ -471,6 +471,7 @@ export default function Create() {
               {currentStep === 5 && (
                 <div className="space-y-4">
                   <CreativeEditor
+                    script={script}
                     downloadProgress={downloadProgress}
                     handleBack={handleBack}
                     mediaObject={{mediaUrls: imageUrls, audioUrl: generatedAudioPath || ""}}

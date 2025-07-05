@@ -21,6 +21,7 @@ type mediaInfo = {
 };
 
 interface CreativeEditorSDKProps {
+  script: string,
   downloadProgress: number,
   handleBack: () => void,
   mediaObject: {
@@ -30,6 +31,7 @@ interface CreativeEditorSDKProps {
 }
 
 const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
+  script,
   downloadProgress,
   handleBack,
   mediaObject,

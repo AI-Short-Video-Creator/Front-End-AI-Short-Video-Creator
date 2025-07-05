@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MyImageProvider } from "./MyImageProvider";
 import { ArrowLeft } from "lucide-react";
 import useFile from "@/hooks/data/useFile";
+import { MultiSynthesisResponse } from "@/types/workspace";
 type mediaInfo = {
   image_id: string;
   image_url: string;
@@ -26,7 +27,7 @@ interface CreativeEditorSDKProps {
   handleBack: () => void,
   mediaObject: {
     mediaUrls: mediaInfo[];
-    audioUrl: string;
+    multiSynthesisResponse: MultiSynthesisResponse | null;
   };
 }
 
@@ -46,57 +47,93 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
 
   const createSceneFromMediaObject = async (
     cesdk: CreativeEditorSDK,
-    mediaObject: { mediaUrls: mediaInfo[]; audioUrl: string }
+    mediaObject: { mediaUrls: mediaInfo[]; multiSynthesisResponse: MultiSynthesisResponse | null }
   ) => {
     try {
       const engine = cesdk.engine;
       const scene = engine.scene.createVideo();
+      const pages = engine.scene.getPages();
+      pages.forEach(page => engine.block.destroy(page));
       const page = engine.block.create("page");
       engine.block.appendChild(scene, page);
 
-      engine.block.setWidth(page, 1280);
-      engine.block.setHeight(page, 720);
+      const pageW = 1280;
+      const pageH = 720;
+
+      engine.block.setWidth(page, pageW);
+      engine.block.setHeight(page, pageH);
 
       const track = engine.block.create("track");
       engine.block.appendChild(page, track);
 
       let currentOffset = 0;
 
-      for (const element of mediaObject.mediaUrls) {
-        const url = element.image_url;
-        const isVideo = url.toLowerCase().endsWith(".mp4");
-        const graphic = engine.block.create("graphic");
-        engine.block.setShape(graphic, engine.block.createShape("rect"));
+      if( mediaObject.multiSynthesisResponse && mediaObject.multiSynthesisResponse.scenes && mediaObject.multiSynthesisResponse.scenes.length > 0) {
+        mediaObject.multiSynthesisResponse.scenes.forEach(async (sceneData, index) => {
+          // audio block for each scene
+          const audioBlock = engine.block.create("audio");
+          engine.block.appendChild(page, audioBlock);
+          engine.block.setString(audioBlock, "audio/fileURI", sceneData.audio_url);
+          engine.block.setTimeOffset(audioBlock, currentOffset);
+          engine.block.setDuration(audioBlock, sceneData.duration);
+          engine.block.setVolume(audioBlock, 0.7);
 
-        const fill = engine.block.createFill(isVideo ? "video" : "image");
-        const key = isVideo
-          ? "fill/video/fileURI"
-          : "fill/image/imageFileURI";
-        engine.block.setString(fill, key, url);
-        engine.block.setFill(graphic, fill);
+          // script block for each scene
+          const scriptBlock = engine.block.create("text");
+          engine.block.appendChild(page, scriptBlock);
+          engine.block.setString(scriptBlock, "text/text", sceneData.script);
+          engine.block.setTimeOffset(scriptBlock, currentOffset);
+          engine.block.setDuration(scriptBlock, sceneData.duration);
 
-        engine.block.setTimeOffset(graphic, currentOffset);
-        engine.block.setDuration(graphic, isVideo ? 10 : 5);
-        engine.block.appendChild(track, graphic);
+          const textWidth = pageW * 0.9;
+          const textHeight = 150;
+          engine.block.setFloat(scriptBlock, "position/x", (pageW - textWidth) / 2);
+          engine.block.setFloat(scriptBlock, "position/y", pageH - textHeight - 20);
+          engine.block.setFloat(scriptBlock, "width", textWidth);
+          engine.block.setFloat(scriptBlock, "height", textHeight);
 
-        if (isVideo) {
-          await engine.block.forceLoadAVResource(fill);
-          engine.block.setTrimLength(fill, 10);
-          engine.block.setMuted(fill, true);
-        }
+          // Font settings
+          engine.block.setFloat(scriptBlock, "text/fontSize", 8);
+          engine.block.setEnum(scriptBlock, "text/horizontalAlignment", "Center");
+          engine.block.setEnum(scriptBlock, "text/verticalAlignment", "Center");
+          
+          // Color settings
+          engine.block.setColor(scriptBlock, "fill/solid/color", { r: 1, g: 1, b: 1, a: 1 });
 
-        engine.block.fillParent(graphic);
-        currentOffset += isVideo ? 10 : 5;
-        console.log("set currentOffset", currentOffset);
-      }
+          // Stroke settings
+          engine.block.setBool(scriptBlock, "stroke/enabled", true);
+          engine.block.setColor(scriptBlock, "stroke/color", { r: 0, g: 0, b: 0, a: 1 });
+          engine.block.setFloat(scriptBlock, "stroke/width", 2);
 
-      if( mediaObject.audioUrl ) {
-      const audioBlock = engine.block.create("audio");
-      engine.block.appendChild(page, audioBlock);
-      engine.block.setString(audioBlock, "audio/fileURI", mediaObject.audioUrl);
-      engine.block.setTimeOffset(audioBlock, 0);
-      engine.block.setDuration(audioBlock, currentOffset);
-      engine.block.setVolume(audioBlock, 0.7);
+          // image block for each scene
+          const url = mediaObject.mediaUrls[index]?.image_url || "";
+          const isVideo = url.toLowerCase().endsWith(".mp4");
+          const graphic = engine.block.create("graphic");
+          engine.block.setShape(graphic, engine.block.createShape("rect"));
+
+          const fill = engine.block.createFill(isVideo ? "video" : "image");
+          const key = isVideo
+            ? "fill/video/fileURI"
+            : "fill/image/imageFileURI";
+          engine.block.setString(fill, key, url);
+          engine.block.setFill(graphic, fill);
+          
+          engine.block.setTimeOffset(graphic, currentOffset);
+          engine.block.setDuration(graphic, sceneData.duration);
+          engine.block.appendChild(track, graphic);
+
+          if (isVideo) {
+            await engine.block.forceLoadAVResource(fill);
+            engine.block.setTrimLength(fill, 10);
+            engine.block.setMuted(fill, true);
+          }
+
+          engine.block.fillParent(graphic);
+
+          // Update current offset for next scene
+          currentOffset += sceneData.duration;
+          console.log("set currentOffset", currentOffset);
+        });
       }
       engine.block.setDuration(page, currentOffset);
     } catch (error) {

@@ -23,12 +23,19 @@ export type ElevenLabsRequest = {
 
 export type SynthesisRequest = GCTTSRequest | ElevenLabsRequest;
 
-export type SynthesisResponse = {
-    message: string;
+export type SceneAudioDetail = {
+    scene_index: number;
+    script: string;
     audio_url: string;
-    filename: string;
+    duration: number;
+};
+
+export type MultiSynthesisResponse = {
+    message: string;
+    total_scenes: number;
     voice_used: string;
-}
+    scenes: SceneAudioDetail[];
+};
 
 const useAudioSynthesis = () => {
     const { toast } = useToast();
@@ -39,7 +46,7 @@ const useAudioSynthesis = () => {
         data: generatedAudioData,
         error: generationError,
     } = useMutation<
-        SynthesisResponse,
+        MultiSynthesisResponse,
         AxiosError<{ message?: string }>,
         SynthesisRequest
     >({
@@ -61,14 +68,14 @@ const useAudioSynthesis = () => {
             };
         }
 
-        const res = await axiosInstance.post<SynthesisResponse>("/voice/synthesis", apiPayload);
+        const res = await axiosInstance.post<MultiSynthesisResponse>("/voice/synthesis", apiPayload);
         return res.data;
         },
         
         onSuccess: (data) => {
             toast({
                 title: "Audio Generated Successfully",
-                description: data.message || `File ${data.filename} has been created.`,
+                description: data.message || `Successfully generated audio for ${data.total_scenes} scenes.`,
             });
         },
 

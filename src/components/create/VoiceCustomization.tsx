@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import LanguageList from "language-list";
 import useVoice from "@/hooks/data/useVoice";
 import useAuth from "@/hooks/data/useAuth";
+import { MultiSynthesisResponse } from "@/types/workspace";
 export interface GoogleCloudVoice {
   name: string | null;
   languageCode: string | null;
@@ -33,7 +34,7 @@ interface CloneVoiceRequest {
 }
 
 interface VoiceCustomizationProps {
-  generatedAudioPath?: string;
+  generatedAudioPath?: MultiSynthesisResponse;
   script: string;
   handleBack: () => void;
   tab: "google" | "elevenlabs";

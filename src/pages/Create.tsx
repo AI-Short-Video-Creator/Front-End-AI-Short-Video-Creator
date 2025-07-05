@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { set } from "date-fns";
+import { MultiSynthesisResponse } from "@/hooks/data/useAudioSynthesis";
 
 export default function Create() {
   const totalSteps = 5;
@@ -108,7 +109,7 @@ export default function Create() {
     state: "idle" as "idle" | "processing" | "ready",
     previewUrl: "",
   });
-  const [generatedAudioPath, setGeneratedAudioPath] = React.useState<string | null>(null);
+  const [generatedAudioPath, setGeneratedAudioPath] = React.useState<MultiSynthesisResponse  | null>(null);
 
 
   const [currentStep, setCurrentStep] = React.useState(1);
@@ -257,12 +258,13 @@ export default function Create() {
     })
   };
 
-  const extractNarrtion = (script: string) => {
-    const narrationLines = script.split(/\r?\n/).filter(line => line.trim().startsWith("Narration:"));
-    return narrationLines.map(line => line.slice("Narration:".length).trim()).join("\n");
-  }
+  // const extractNarrtion = (script: string) => {
+  //   const narrationLines = script.split(/\r?\n/).filter(line => line.trim().startsWith("Narration:"));
+  //   return narrationLines.map(line => line.slice("Narration:".length).trim()).join("\n");
+  // }
 
   const handleGenerateAudio = async () => {
+    let payload;
     if (tab === "google") {
       if (!googleCloudVoice.name || !script) {
         toast({
@@ -272,20 +274,15 @@ export default function Create() {
         });
         return;
       }
-      const payload = {
+      payload = {
         provider: 'gctts' as const,
-        script: extractNarrtion(script),
+        script: script,
         voice_name: googleCloudVoice.name,
         language_code: googleCloudVoice.languageCode!,
         speaking_rate: googleCloudVoice.speakingRate,
         pitch: googleCloudVoice.pitch,
         volume_gain_db: googleCloudVoice.volume,
       };
-      const result = await generateAudio(payload);
-      if (result && result.audio_url) {
-        setGeneratedAudioPath(result.audio_url);
-        setCurrentStep(5);
-      }
     } else if (tab === "elevenlabs") {
       if (!elevenLabsClonedVoice.voiceId || elevenLabsClonedVoice.state !== "ready" || !script) {
         toast({
@@ -295,18 +292,27 @@ export default function Create() {
         });
         return;
       }
-      const payload = {
+      payload = {
         provider: 'elevenlabs' as const,
-        script: extractNarrtion(script),
+        script: script,
         voice_id: elevenLabsClonedVoice.voiceId,
         stability: elevenLabsClonedVoice.stability,
         speed: elevenLabsClonedVoice.speed,
       };
       const result = await generateAudio(payload);
-      if (result && result.audio_url) {
-        setGeneratedAudioPath(result.audio_url);
-        setCurrentStep(5);
-      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Please select a valid voice tab.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const result = await generateAudio(payload);
+    if (result && result.scenes && result.scenes.length > 0) {
+      setGeneratedAudioPath(result);
+      setCurrentStep(5);
     }
     // if (elevenLabsClonedVoice.voiceId) {
     //   deleteVoice(elevenLabsClonedVoice.voiceId);
@@ -482,7 +488,7 @@ export default function Create() {
                   <CreativeEditor
                     downloadProgress={downloadProgress}
                     handleBack={handleBack}
-                    mediaObject={{ mediaUrls: imageUrls, audioUrl: generatedAudioPath || "" }}
+                    mediaObject={{ mediaUrls: imageUrls, multiSynthesisResponse: generatedAudioPath }}
                   />
                 </div>
               )}

@@ -36,19 +36,19 @@ export function Header() {
             <span className={`ml-1 text-sm font-semibold tracking-wide uppercase font-sans ${theme === "light" ? "text-gray-600" : "text-white/70"}`}>CREATOR</span>
           </Link>
           <nav className="hidden md:flex gap-6">
-            <Link to="/" className={`flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors ${theme === "light" ? "text-gray-800" : ""}`}>
+            <Link to="/" className="flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors text-white">
               <Home className="w-5 h-5 text-creative-500" /> HOME
             </Link>
-            <Link to="/library" className={`flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors ${theme === "light" ? "text-gray-800" : ""}`}>
+            <Link to="/library" className="flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors text-white">
               <User className="w-5 h-5 text-creative-500" /> MY VIDEOS
             </Link>
-            <Link to="/workspace" className={`flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors ${theme === "light" ? "text-gray-800" : ""}`}>
+            <Link to="/workspace" className="flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors text-white">
               <FolderOpen className="w-5 h-5 text-creative-500" /> WORKSPACE
             </Link>
-            <Link to="/share" className={`flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors ${theme === "light" ? "text-gray-800" : ""}`}>
+            <Link to="/share" className="flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors text-white">
               <Share2 className="w-5 h-5 text-creative-500" /> SHARE
             </Link>
-            <Link to="/analytics" className={`flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors ${theme === "light" ? "text-gray-800" : ""}`}>
+            <Link to="/analytics" className="flex items-center gap-2 text-sm font-extrabold tracking-widest uppercase font-sans hover:text-creative-500 transition-colors text-white">
               <BarChart className="w-5 h-5 text-creative-500" /> ANALYTICS
             </Link>
           </nav>

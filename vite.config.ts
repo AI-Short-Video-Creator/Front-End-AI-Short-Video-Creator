@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8081,
+    allowedHosts: [
+      "quickclipshare.loca.lt"
+    ],
   },
   plugins: [
     react(),

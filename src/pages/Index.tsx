@@ -9,7 +9,7 @@ import { TrendingTopics } from "@/components/content/trending-topics"
 
 export default function Index() {
   const [searchQuery, setSearchQuery] = React.useState("")
-  const navigate = useNavigate() 
+  const navigate = useNavigate()
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,8 +19,8 @@ export default function Index() {
   }
 
   const handleSelectTopic = (topic: string) => {
-    setSearchQuery(topic)
-    navigate(`/search?topic=${encodeURIComponent(topic)}`)
+    const cleanTopic = topic.replace(/^\d+\.\s*/, ''); // Xóa '5. ' hoặc '12. ' ở đầu
+    navigate(`/create?keyword=${encodeURIComponent(cleanTopic)}`);
   }
 
   return (
@@ -33,10 +33,10 @@ export default function Index() {
               Create Trending <span className="text-gradient">Short Videos</span> with AI
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Transform ideas into engaging short-form videos in minutes. 
+              Transform ideas into engaging short-form videos in minutes.
               Powered by AI to help you create content that trends.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button asChild size="lg" className="gap-2">
                 <Link to="/create">
@@ -52,16 +52,16 @@ export default function Index() {
             </div>
 
             <form onSubmit={handleSearch} className="relative max-w-xl mx-auto">
-              <Input 
+              <Input
                 className="pr-10 h-12 text-base"
                 placeholder="Search for trending topics, ideas, or keywords..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Button 
-                type="submit" 
-                size="icon" 
-                variant="ghost" 
+              <Button
+                type="submit"
+                size="icon"
+                variant="ghost"
                 className="absolute right-1 top-1 h-10 w-10"
               >
                 <Search className="h-5 w-5" />
@@ -76,7 +76,7 @@ export default function Index() {
               </div>
               <div className="flex flex-wrap gap-2 justify-center mt-3">
                 {["AI", "Tech", "Fashion", "Health", "Finance", "Education"].map((tag) => (
-                  <button 
+                  <button
                     key={tag}
                     className="px-3 py-1 rounded-full text-sm bg-creative-50 text-creative-600 hover:bg-creative-100"
                     onClick={() => setSearchQuery(tag)}
@@ -87,7 +87,7 @@ export default function Index() {
               </div>
             </div>
           </div>
-          
+
           <TrendingTopics onSelectTopic={handleSelectTopic} />
 
           <div className="mt-20 max-w-4xl mx-auto">
@@ -104,7 +104,7 @@ export default function Index() {
                   Discover what's trending and create content that resonates with your audience.
                 </p>
               </div>
-              
+
               <div className="p-6 rounded-lg border bg-background shadow-sm">
                 <div className="h-12 w-12 flex items-center justify-center rounded-full bg-creative-100 text-creative-600 mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
@@ -117,7 +117,7 @@ export default function Index() {
                   Transform ideas into engaging scripts ready for production with AI assistance.
                 </p>
               </div>
-              
+
               <div className="p-6 rounded-lg border bg-background shadow-sm">
                 <div className="h-12 w-12 flex items-center justify-center rounded-full bg-creative-100 text-creative-600 mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">

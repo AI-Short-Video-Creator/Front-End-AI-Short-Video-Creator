@@ -21,6 +21,7 @@ import { fetchTotalVideoViewsForPage } from "@/lib/facebook-insights";
 import { fetchTotalYouTubeViewsByOwnerChannel } from "@/lib/youtube-insights";
 import { fetchTotalTiktokViews } from "@/lib/tiktok-insights";
 import { useEffect, useState } from "react";
+import { useVideo } from "@/hooks/data/useMyVideo";
 
 // Replace the mock video links with your real video links here.
 // Example:
@@ -34,44 +35,11 @@ type Video = {
   link?: string;
 };
 
-const initialMockVideos: Video[] = [
-  {
-    id: 'vid1',
-    title: 'My Awesome First Video',
-    thumbnail: 'https://images.pexels.com/photos/799137/pexels-photo-799137.jpeg',
-    date: 'Jun 10, 2025',
-    sharedOn: { facebook: true, youtube: false, tiktok: false },
-    videoUrl: 'https://res.cloudinary.com/create-video-ai/video/upload/v1749640312/user_videos/videos/video_2aab1596-7c29-4b0a-859b-1831b577725d.mp4'
-  },
-  {
-    id: 'vid2',
-    title: 'Mountain Trip',
-    thumbnail: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-    date: 'Jun 12, 2025',
-    sharedOn: { facebook: true, youtube: true, tiktok: false },
-    videoUrl: 'https://res.cloudinary.com/create-video-ai/video/upload/v1749640312/user_videos/videos/video_2aab1596-7c29-4b0a-859b-1831b577725d.mp4'
-  },
-  {
-    id: 'vid3',
-    title: 'Unboxing New Tech',
-    thumbnail: 'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7',
-    date: 'Jun 14, 2025',
-    sharedOn: { facebook: false, youtube: true, tiktok: false },
-    videoUrl: 'https://res.cloudinary.com/create-video-ai/video/upload/v1749640312/user_videos/videos/video_2aab1596-7c29-4b0a-859b-1831b577725d.mp4'
-  },
-  {
-    id: 'vid4',
-    title: 'Quick Cooking Tutorial',
-    thumbnail: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
-    date: 'Jun 15, 2025',
-    sharedOn: { facebook: false, youtube: false, tiktok: false },
-    videoUrl: 'https://res.cloudinary.com/create-video-ai/video/upload/v1749640312/user_videos/videos/video_2aab1596-7c29-4b0a-859b-1831b577725d.mp4'
-  }
-];
-
 const API_SOCIAL_ALL = import.meta.env.VITE_PUBLIC_API_URL + "/social/all";
 
 export default function Share() {
+  const { videos: fetchedVideos } = useVideo();
+
   const FACEBOOK_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
   const YOUTUBE_APP_ID = import.meta.env.VITE_YOUTUBE_APP_ID;
   const TIKTOK_CLIENT_KEY = import.meta.env.VITE_TIKTOK_CLIENT_KEY;
@@ -96,10 +64,51 @@ export default function Share() {
     tiktok: 0,
   }
 
-  const [videos, setVideos] = useState(initialMockVideos);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [selectedVideo, setSelectedVideo] = React.useState<(typeof videos)[0] | null>(null);
   const [videoToDeleteId, setVideoToDeleteId] = React.useState<string | null>(null);
+
+  // Update videos when fetchedVideos changes
+  useEffect(() => {
+    if (fetchedVideos) {
+      const transformedVideos: Video[] = fetchedVideos.map((v) => ({
+        id: v.id,
+        title: v.title ?? 'Untitled',
+        thumbnail: v.thumbnail ?? '',
+        date: v.date
+          ? (() => {
+          const d = new Date(v.date);
+          // Format: Jun 11, 2025, 5:07:20 PM
+          return d.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+          });
+        })()
+          : (() => {
+          const d = new Date();
+          return d.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+          });
+        })(),
+        videoUrl: v.video_path ?? '',
+        sharedOn: { facebook: false, youtube: false, tiktok: false },
+        link: undefined,
+      }));
+      setVideos(transformedVideos);
+    }
+  }, [fetchedVideos]);
 
   React.useEffect(() => {
     const fbToken = localStorage.getItem("fb_access_token");
@@ -359,7 +368,7 @@ export default function Share() {
                 thumbnail={video.thumbnail}
                 date={video.date}
                 onShare={() => handleShareClick(video)}
-                onDelete={() => handleDeleteClick(video.id)}
+                //onDelete={() => handleDeleteClick(video.id)}
                 sharedOn={video.sharedOn}
                 videoUrl={video.videoUrl}
                 link={video.link} // <-- thêm dòng này

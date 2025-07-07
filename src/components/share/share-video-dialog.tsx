@@ -19,6 +19,8 @@ import { toast } from "sonner"
 import { postVideoToPageWithThumbnail } from "@/lib/facebook-insights";
 import { uploadVideoToYouTubeViaBackend } from "@/lib/youtube-insights";
 import { uploadVideoToTiktokByUrl } from "@/lib/tiktok-insights";
+import { LoadingSpinner } from "../Loading";
+
 const API_CAPTION_URL = import.meta.env.VITE_PUBLIC_API_URL + "/caption/social" as string;
 
 interface ShareVideoDialogProps {
@@ -239,7 +241,11 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
           <div className="flex flex-col">
             <Label>Video preview</Label>
             <div className="mt-2 flex-grow">
-              <ShareVideoPreview posterSrc={video.thumbnail} className="h-full" />
+              <ShareVideoPreview 
+                posterSrc={video.thumbnail} 
+                videoSrc={video.videoUrl}
+                className="h-full" 
+              />
             </div>
           </div>
           <div className="space-y-4 flex flex-col">
@@ -270,7 +276,7 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
               className="w-full sm:w-auto"
               disabled={sharing || generatingCaption}
             >
-              {generatingCaption ? "Generating..." : "Generate auto captions"}
+                {generatingCaption ? <><LoadingSpinner className="mr-2 h-4 w-4" /> Generating</> : "Generate auto captions"}
             </Button>
             {/* Language Selector */}
             <div className="flex items-center gap-2">
@@ -305,7 +311,7 @@ export function ShareVideoDialog({ video, connections, open, onOpenChange, onCon
               className="w-full sm:w-auto"
               disabled={sharing || generatingCaption}
             >
-              {sharing ? "Sharing..." : "Share now"}
+                {sharing ? (<><LoadingSpinner className="mr-2 h-4 w-4" /> Sharing</>) : "Share now"}
             </Button>
           </div>
         </DialogFooter>

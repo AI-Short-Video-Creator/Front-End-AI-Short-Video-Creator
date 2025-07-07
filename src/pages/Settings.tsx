@@ -13,7 +13,23 @@ import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } fro
 
 const Settings = () => {
   // State for theme mode
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    // Try to load theme from localStorage, fallback to "dark"
+    const storedTheme = localStorage.getItem("theme");
+    return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
+  });
+
+  // Sync theme to localStorage and document class
+  React.useEffect(() => {
+    localStorage.setItem("theme", theme);
+    if (theme === "light") {
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+    }
+  }, [theme]);
   
   // State for notification settings
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -55,7 +71,7 @@ const Settings = () => {
         </div>
         
         <Tabs defaultValue="appearance" className="w-full">
-          <TabsList className="mb-8 bg-black/60 border border-creative-800">
+          <TabsList className={`mb-8 border ${theme === "light" ? "bg-gray-200/50 border-gray-200" : "bg-black/60 border-creative-800"}`}>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="privacy">Privacy & Security</TabsTrigger>

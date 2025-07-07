@@ -10,11 +10,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { VideoImportDialog } from "./video-import-dialog";
+import { VideoEditDialog } from "./video-edit";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { useVideo } from "@/hooks/data/useMyVideo";
 import { formatDate } from "date-fns";
+import { toast } from "sonner";
 
 interface LibraryGridProps {
   search: string;
@@ -23,10 +34,18 @@ interface LibraryGridProps {
 export function LibraryGrid({ search }: LibraryGridProps) {
   const [videoToDelete, setVideoToDelete] = React.useState<string | null>(null);
   const [importOpen, setImportOpen] = React.useState(false);
-  const { importVideo, isImportingVideo, videos, deleteVideo } = useVideo();
+  const [editingVideo, setEditingVideo] = React.useState<any>(null);
+  const { importVideo, isImportingVideo, videos, deleteVideo, updateVideo, isUpdatingVideo } = useVideo();
 
   const handleDeleteClick = (id: string) => {
     setVideoToDelete(id);
+  }
+
+  const handleEditClick = (id: string) => {
+    const video = videos?.find(v => v.id === id);
+    if (video) {
+      setEditingVideo(video);
+    }
   }
 
   const handleConfirmDelete = () => {
@@ -44,6 +63,23 @@ export function LibraryGrid({ search }: LibraryGridProps) {
     importVideo({ file, title, thumbnail });
   }
 
+  const handleUpdateVideo = (data: { videoId: string; title?: string; thumbnail?: File }) => {
+    updateVideo(data);
+  }
+
+  // Close edit dialog when update is completed successfully
+  const [wasUpdating, setWasUpdating] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (isUpdatingVideo) {
+      setWasUpdating(true);
+    } else if (wasUpdating && !isUpdatingVideo) {
+      // Update completed successfully, close dialog
+      setEditingVideo(null);
+      setWasUpdating(false);
+    }
+  }, [isUpdatingVideo, wasUpdating]);
+
   return (
     <div className="mt-6">
       <div className="flex justify-between items-center mb-4">
@@ -56,16 +92,22 @@ export function LibraryGrid({ search }: LibraryGridProps) {
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {videos?.map((video) => video.title.toLowerCase().includes(search.toLowerCase()) && (
+        {videos?.map((video) => {
+          const displayTitle = video.title?.trim() ? video.title : "Untitled";
+          return (
+        displayTitle.toLowerCase().includes(search.toLowerCase()) && (
           <VideoCard
             key={video.id}
-            title={video.title}
-            thumbnail={video.thumbnail}
+            title={displayTitle}
+            thumbnail={video.thumbnail || undefined}
             date={formatDate(video.date || new Date(), "PPpp")}
+            onEdit={() => handleEditClick(video.id)}
             onDelete={() => handleDeleteClick(video.id)}
             videoUrl={video.video_path}
           />
-        ))}
+        )
+          );
+        })}
       </div>
       <AlertDialog open={videoToDelete !== null} onOpenChange={(open) => !open && setVideoToDelete(null)}>
         <AlertDialogContent>
@@ -87,6 +129,14 @@ export function LibraryGrid({ search }: LibraryGridProps) {
         onOpenChange={setImportOpen}
         onImport={handleImportVideo}
         isImporting={isImportingVideo}
+      />
+
+      <VideoEditDialog
+        open={!!editingVideo}
+        onOpenChange={() => setEditingVideo(null)}
+        onUpdate={handleUpdateVideo}
+        isUpdating={isUpdatingVideo}
+        video={editingVideo}
       />
     </div>
   )

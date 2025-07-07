@@ -62,7 +62,7 @@ export default function Create() {
       setIsLoadingWorkspace(true);
     } else if (urlKeyword) {
       setKeyword(urlKeyword);
-      handleGenerateScript();
+      //handleGenerateScript();
     }
   }, [location.search]);
 

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Header } from "@/components/navigation/header"
 import { TrendCard } from "@/components/ui/trend-card"
 import { Button } from "@/components/ui/button"
@@ -7,6 +7,7 @@ import { ChevronLeft, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
 export default function AllTrendingTopics() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = React.useState("")
   const [allTopics, setAllTopics] = React.useState([])
   const [filteredTopics, setFilteredTopics] = React.useState([])
@@ -45,7 +46,8 @@ export default function AllTrendingTopics() {
   }
 
   const handleSelectTopic = (topic: string) => {
-    console.log("Selected topic:", topic)
+    const cleanTopic = topic.replace(/^\d+\.\s*/, ''); // Xóa '5. ' hoặc '12. ' ở đầu
+    navigate(`/create?keyword=${encodeURIComponent(cleanTopic)}`);
   }
 
   React.useEffect(() => {

@@ -2,7 +2,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Play, Trash2, MoreHorizontal, Share2, Download, Facebook, Youtube, Music } from "lucide-react"
+import { Play, Trash2, MoreHorizontal, Share2, Download, Facebook, Youtube, Music, Pencil } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -30,6 +30,7 @@ interface VideoCardProps extends React.HTMLAttributes<HTMLDivElement> {
         youtube?: string;
         tiktok?: string;
     };
+    onEdit?: () => void
     onPlay?: () => void
     onDelete?: () => void
     onShare?: () => void
@@ -42,6 +43,7 @@ export function VideoCard({
     title,
     thumbnail,
     date,
+    onEdit,
     onPlay,
     onDelete,
     onShare,
@@ -56,7 +58,7 @@ export function VideoCard({
     return (
         <Card
             className={cn(
-                "border border-border/40 bg-white shadow-sm overflow-hidden",
+                "border border-border/40 shadow-sm overflow-hidden",
                 className
             )}
             {...props}
@@ -66,7 +68,7 @@ export function VideoCard({
                     <video
                         src={videoUrl}
                         controls
-                        className="w-full h-full object-cover rounded"
+                        className="w-full h-full object-cover bg-gray-100"
                         poster={thumbnail}
                         style={{ aspectRatio: "16/9", minHeight: 120 }}
                     />
@@ -74,7 +76,7 @@ export function VideoCard({
                     <img
                         src={thumbnail}
                         alt={title}
-                        className="w-full h-full object-cover rounded"
+                        className="w-full h-full object-cover bg-gray-100"
                         style={{ aspectRatio: "16/9", minHeight: 120 }}
                     />
                 )}
@@ -92,18 +94,29 @@ export function VideoCard({
                                 <span>Share</span>
                             </DropdownMenuItem>
                         )}
-                        {onShare && (
+                        {onEdit && (
+                            <DropdownMenuItem
+                                onClick={onEdit}
+                                className="text-primary focus:text-primary focus:bg-primary/10"
+                            >
+                                <Pencil className="mr-2 h-4 w-4" />
+                                <span>Edit</span>
+                            </DropdownMenuItem>
+                        )}
+                        {onEdit && onDelete && (
                             <DropdownMenuSeparator />
                         )}
-                        <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            <span>Delete</span>
-                        </DropdownMenuItem>
+                        {onDelete && (
+                            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete</span>
+                            </DropdownMenuItem>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
             <CardContent className="p-3">
-                <h3 className="font-medium text-sm truncate mb-1 text-black dark:text-white">{title}</h3>
+                <h3 className="font-medium text-sm truncate mb-1">{title}</h3>
                 {date && <p className="text-xs text-muted-foreground">{date}</p>}
                 {sharedOn && Object.values(sharedOn).some(v => v) && (
                     <div className="flex items-center gap-2 mt-2">

@@ -47,13 +47,13 @@ export async function fetchTotalVideoViewsForPage(): Promise<number> {
  * @param videoUrl - The public URL of the video file
  * @param title - The title of the post
  * @param caption - The caption/description of the post
- * @param thumbnailUrl - The public URL of the thumbnail image
+ * @param thumbnailUrl - The public URL of the thumbnail image (optional)
  */
 export async function postVideoToPageWithThumbnail(
   videoUrl: string,
   title: string,
   caption: string,
-  thumbnailUrl: string
+  thumbnailUrl?: string | null
 ): Promise<{ video_id: string; permalink_url?: string }> {
   const accessToken = localStorage.getItem("fb_access_token");
   if (!accessToken) {
@@ -74,8 +74,15 @@ export async function postVideoToPageWithThumbnail(
 
   // Download video file as Blob
   const videoBlob = await fetch(videoUrl).then(res => res.blob());
-  // Download thumbnail as Blob
-  const thumbBlob = await fetch(thumbnailUrl).then(res => res.blob());
+  
+  // Generate thumbnail from video if not provided
+  let thumbBlob: Blob;
+  if (thumbnailUrl) {
+    thumbBlob = await fetch(thumbnailUrl).then(res => res.blob());
+  } else {
+    // Create thumbnail from video at 3 seconds
+    thumbBlob = await generateThumbnailFromVideo(videoBlob, 1);
+  }
 
   // Prepare FormData
   const formData = new FormData();
@@ -83,7 +90,7 @@ export async function postVideoToPageWithThumbnail(
   formData.append("title", title);
   formData.append("description", caption);
   formData.append("access_token", pageAccessToken);
-  formData.append("thumb", new File([thumbBlob], "thumbnail.jpg", { type: thumbBlob.type || "image/jpeg" }));
+  formData.append("thumb", new File([thumbBlob], "thumbnail.jpg", { type: "image/jpeg" }));
 
   // Facebook Graph API endpoint for uploading video to a page
   const uploadRes = await fetch(`https://graph.facebook.com/v23.0/${pageId}/videos`, {
@@ -112,6 +119,67 @@ export async function postVideoToPageWithThumbnail(
   }
 
   return { video_id: uploadData.id, permalink_url };
+}
+
+/**
+ * Generate thumbnail from video blob at specific time
+ * @param videoBlob - Video file as Blob
+ * @param timeInSeconds - Time in seconds to capture thumbnail
+ * @returns Promise<Blob> - Thumbnail image as Blob
+ */
+async function generateThumbnailFromVideo(videoBlob: Blob, timeInSeconds: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      reject(new Error('Cannot get canvas context'));
+      return;
+    }
+
+    video.addEventListener('loadedmetadata', () => {
+      // Set canvas dimensions
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 360;
+      
+      // Set video time to capture thumbnail
+      const seekTime = Math.min(timeInSeconds, video.duration - 0.1);
+      video.currentTime = seekTime;
+    });
+
+    video.addEventListener('seeked', () => {
+      try {
+        // Draw video frame to canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert canvas to blob
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to generate thumbnail blob'));
+          }
+        }, 'image/jpeg', 0.8);
+      } catch (error) {
+        reject(error);
+      } finally {
+        // Cleanup
+        video.remove();
+        canvas.remove();
+      }
+    });
+
+    video.addEventListener('error', (error) => {
+      reject(new Error('Video loading error: ' + error));
+    });
+
+    // Set video source and load
+    video.src = URL.createObjectURL(videoBlob);
+    video.muted = true;
+    video.preload = 'metadata';
+    video.load();
+  });
 }
 
 /**

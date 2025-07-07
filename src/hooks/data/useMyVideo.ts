@@ -84,5 +84,36 @@ export function useVideo() {
     },
   });
 
-  return { videos, isLoadingVideos, refetchVideos, deleteVideo, importVideo, isImportingVideo };
+  const {
+    mutate: updateVideo,
+    isPending: isUpdatingVideo
+  } = useMutation({
+    mutationFn: async (data: { videoId: string; title?: string; thumbnail?: File }) => {
+      const formData = new FormData();
+      if (data.title) {
+        formData.append("title", data.title);
+      }
+      if (data.thumbnail) {
+        formData.append("thumbnail", data.thumbnail);
+      }
+      await axiosInstance.put(`/videos/${data.videoId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Video updated",
+        description: "The video has been successfully updated.",
+      });
+      refetchVideos && refetchVideos();
+    },
+    onError: () => {
+      toast({
+        title: "Error updating video",
+        description: "There was an error updating the video.",
+      });
+    },
+  });
+
+  return { videos, isLoadingVideos, refetchVideos, deleteVideo, importVideo, isImportingVideo, updateVideo, isUpdatingVideo };
 }

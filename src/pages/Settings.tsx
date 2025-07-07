@@ -10,26 +10,10 @@ import { Settings as SettingsIcon, Moon, Sun, Bell, Shield, Key } from "lucide-r
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
+import { useTheme } from "@/lib/theme";
 
 const Settings = () => {
-  // State for theme mode
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    // Try to load theme from localStorage, fallback to "dark"
-    const storedTheme = localStorage.getItem("theme");
-    return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
-  });
-
-  // Sync theme to localStorage and document class
-  React.useEffect(() => {
-    localStorage.setItem("theme", theme);
-    if (theme === "light") {
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-    } else {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    }
-  }, [theme]);
+  const { theme, toggleTheme } = useTheme();
   
   // State for notification settings
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -40,18 +24,8 @@ const Settings = () => {
   
   // Handle theme change
   const handleThemeChange = () => {
+    toggleTheme();
     const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    
-    // Apply the theme to the document
-    if (newTheme === "light") {
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-    } else {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    }
-    
     toast.success(`${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} mode activated`);
   };
   

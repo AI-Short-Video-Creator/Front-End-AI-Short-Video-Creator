@@ -250,7 +250,11 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
               URL.revokeObjectURL(url);
               // Upload to backend using custom hook
               try {
-                await uploadVideoAsync(exportBlob);
+                await uploadVideoAsync({ 
+                  videoFile: exportBlob, 
+                  title: videoTitle, 
+                  thumbnail: thumbnailUrl 
+                });
               } catch (e) {
                 console.error('Video upload failed:', e);
               }

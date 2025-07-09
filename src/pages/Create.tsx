@@ -371,6 +371,8 @@ export default function Create() {
         imageUrls: imageUrls || [],
         sessionId: sessionId || null,
         videoUrl: videoUrl || null,
+        videoTitle: videoTitle || null,
+        thumbnailUrl: thumbnailUrl || null,
         totalSteps: totalSteps,
         currentStep: currentStep,
         isCompleted: currentStep === totalSteps,

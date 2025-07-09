@@ -40,7 +40,7 @@ export function ImageCreation({
   handleNextStep,
   onImageUpdate,
   onVideoMetaUpdate,
-  
+
 }: ImageCreationProps) {
   const { regenerateImageAsync, isCreatingImage, isRegeneratingImage, createImagetAsync } = useImage();
   const { generateCaptionAsync, isGeneratingCaption } = useCaption();
@@ -181,38 +181,33 @@ export function ImageCreation({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Video Title Section */}
-        <div className="mb-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Type className="h-4 w-4" />
-            <h3 className="text-lg font-medium">Video Title</h3>
-          </div>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter video title or generate one..."
-              value={videoTitle}
-              onChange={(e) => setVideoTitle(e.target.value)}
-              className="flex-1"
-            />
-            <Button 
-              onClick={handleGenerateTitle}
-              disabled={isGeneratingCaption}
-              variant="outline"
-            >
-              <Sparkles className="h-4 w-4 mr-2" />
-              {isGeneratingCaption ? "Generating..." : "Generate"}
-            </Button>
-          </div>
-        </div>
+        {/* Video Title & Thumbnail Section - 2 Column Grid */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Controls Column - 1 column */}
+          <div className="space-y-4">
+            {/* Video Title Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-2">Video Title</h3>
+              <Input
+                placeholder="Enter video title or generate one..."
+                value={videoTitle}
+                onChange={(e) => setVideoTitle(e.target.value)}
+                className="w-full mb-2"
+              />
+              <Button 
+                onClick={handleGenerateTitle}
+                disabled={isGeneratingCaption}
+                variant="outline"
+                className="w-full"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {isGeneratingCaption ? "Generating..." : "Generate"}
+              </Button>
+            </div>
 
-        {/* Thumbnail Section */}
-        <div className="mb-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Image className="h-4 w-4" />
-            <h3 className="text-lg font-medium">Video Thumbnail</h3>
-          </div>
-          <div className="flex gap-4">
-            <div className="flex-1">
+            {/* Video Thumbnail Section */}
+            <div>
+              <h3 className="text-lg font-medium mb-2">Video Thumbnail</h3>
               <Button 
                 onClick={handleGenerateThumbnail}
                 disabled={isGeneratingThumbnail || !videoTitle.trim()}
@@ -220,16 +215,32 @@ export function ImageCreation({
                 className="w-full"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
-                {isGeneratingThumbnail ? "Generating..." : "Generate Thumbnail"}
+                {isGeneratingThumbnail ? "Generating..." : "Generate"}
               </Button>
             </div>
-            {thumbnailUrl && (
-              <div className="w-32 h-18 bg-gray-100 rounded-md overflow-hidden">
+          </div>
+
+          {/* Thumbnail Display - 1 column */}
+          <div className="h-full flex flex-col">
+            {thumbnailUrl ? (
+              <div className="w-full flex-1 rounded-md overflow-hidden border-4 border-white shadow-lg">
                 <img
                   src={thumbnailUrl}
                   alt="Generated thumbnail"
                   className="w-full h-full object-cover"
                 />
+              </div>
+            ) : (
+              <div className="w-full flex-1 bg-gray-50 rounded-md border-4 border-white shadow-lg flex flex-col items-center justify-center">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center">
+                  <Image className="h-12 w-12 text-gray-400 mb-3" />
+                  <span className="text-sm text-gray-500 text-center font-medium">
+                    Thumbnail Preview
+                  </span>
+                  <span className="text-xs text-gray-400 text-center mt-1">
+                    Generate a title first, then create thumbnail
+                  </span>
+                </div>
               </div>
             )}
           </div>

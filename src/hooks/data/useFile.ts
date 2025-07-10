@@ -6,11 +6,19 @@ const useFile = () => {
     const { toast } = useToast();
 
     const { isSuccess: isUploadedVideo, mutateAsync: uploadVideoAsync, isPending: isUploadingVideo, data: videoData } = useMutation({
-        mutationFn: async (videoFile: Blob) => {
+        mutationFn: async ({ videoFile, title, thumbnail }: { videoFile: Blob; title?: string; thumbnail?: string }) => {
             const formData = new FormData();
             formData.append('video', videoFile, 'export.mp4');
             
-            console.log("Uploading video to backend...");
+            // Add title and thumbnail if provided
+            if (title) {
+                formData.append('title', title);
+            }
+            if (thumbnail) {
+                formData.append('thumbnail', thumbnail);
+            }
+            
+            console.log("Uploading video to backend with metadata...", { title, thumbnail });
             const res = await axiosInstance.post("/file/video", formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'

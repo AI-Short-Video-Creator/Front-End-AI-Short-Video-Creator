@@ -91,6 +91,8 @@ export default function Create() {
     setImageUrls(workspace.imageUrls);
     setSessionId(workspace.sessionId);
     setVideoUrl(workspace.videoUrl || "");
+    setVideoTitle(workspace.videoTitle || "");
+    setThumbnailUrl(workspace.thumbnailUrl || "");
   };
 
 
@@ -119,6 +121,8 @@ export default function Create() {
   const [downloadProgress, setDownloadProgress] = React.useState(0);
   const [sessionId, setSessionId] = React.useState("");
   const [videoUrl, setVideoUrl] = React.useState(""); // Changed from videoPath
+  const [videoTitle, setVideoTitle] = React.useState("");
+  const [thumbnailUrl, setThumbnailUrl] = React.useState("");
 
   
   const [keyword, setKeyword] = React.useState("")
@@ -214,6 +218,11 @@ export default function Create() {
     const newImageUrls = [...imageUrls];
     newImageUrls[index] = newImageData;
     setImageUrls(newImageUrls);
+  };
+
+  const handleVideoMetaUpdate = (title: string, thumbnail: string) => {
+    setVideoTitle(title);
+    setThumbnailUrl(thumbnail);
   };
 
   // const handleCreateVideo = async () => {
@@ -362,6 +371,8 @@ export default function Create() {
         imageUrls: imageUrls || [],
         sessionId: sessionId || null,
         videoUrl: videoUrl || null,
+        videoTitle: videoTitle || null,
+        thumbnailUrl: thumbnailUrl || null,
         totalSteps: totalSteps,
         currentStep: currentStep,
         isCompleted: currentStep === totalSteps,
@@ -460,6 +471,7 @@ export default function Create() {
                     sessionId={sessionId}
                     handleNextStep={handleNextStep}
                     onImageUpdate={handleImageUrlUpdate}
+                    onVideoMetaUpdate={handleVideoMetaUpdate}
                   />
                 </div>
               )}
@@ -489,6 +501,8 @@ export default function Create() {
                     downloadProgress={downloadProgress}
                     handleBack={handleBack}
                     mediaObject={{ mediaUrls: imageUrls, multiSynthesisResponse: generatedAudioPath }}
+                    videoTitle={videoTitle}
+                    thumbnailUrl={thumbnailUrl}
                   />
                 </div>
               )}

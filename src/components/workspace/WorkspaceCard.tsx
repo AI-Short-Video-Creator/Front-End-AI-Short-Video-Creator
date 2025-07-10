@@ -134,9 +134,9 @@ export function WorkspaceCard({ workspace, onOpen, onDuplicate, onDelete }: Work
       <CardContent className="pb-3 flex-1 flex flex-col">
         {/* Thumbnail */}
         <div className="aspect-video bg-gradient-to-br from-creative-100 to-creative-200 rounded-lg mb-4 flex items-center justify-center overflow-hidden flex-shrink-0">
-          {workspace.thumbnail ? (
+          {workspace.thumbnailUrl || workspace.thumbnail? (
             <img
-              src={workspace.thumbnail}
+              src={workspace.thumbnailUrl || workspace.thumbnail}
               alt={workspace.name}
               className="w-full h-full object-cover"
             />

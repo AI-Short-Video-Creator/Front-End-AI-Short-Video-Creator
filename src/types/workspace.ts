@@ -116,6 +116,7 @@ export interface WorkspaceListItem {
   name: string;
   description?: string;
   thumbnail?: string;
+  thumbnailUrl?: string;
   createdAt: any;
   updatedAt: any;
   isCompleted: boolean;

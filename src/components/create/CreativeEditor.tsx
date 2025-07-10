@@ -100,14 +100,14 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
           engine.block.setDuration(titleBlock, titleDuration);
 
           const titleWidth = pageW * 0.8;
-          const titleHeight = 100;
+          const titleHeight = 200;
           engine.block.setFloat(titleBlock, "position/x", (pageW - titleWidth) / 2);
           engine.block.setFloat(titleBlock, "position/y", (pageH - titleHeight) / 2);
           engine.block.setFloat(titleBlock, "width", titleWidth);
           engine.block.setFloat(titleBlock, "height", titleHeight);
 
           // Title styling
-          engine.block.setFloat(titleBlock, "text/fontSize", 24);
+          engine.block.setFloat(titleBlock, "text/fontSize", 15);
           engine.block.setEnum(titleBlock, "text/horizontalAlignment", "Center");
           engine.block.setEnum(titleBlock, "text/verticalAlignment", "Center");
           

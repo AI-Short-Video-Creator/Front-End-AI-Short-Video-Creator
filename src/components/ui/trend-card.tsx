@@ -37,7 +37,7 @@ export function TrendCard({
         )}
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">{title}</h3>
+        <h3 className="font-bold text-gray-900 mb-1">{title}</h3>
         {description && <p className="text-sm text-muted-foreground">{description}</p>}
         <div className="mt-3 flex justify-end">
           <ArrowRight size={16} className="text-creative-500 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />

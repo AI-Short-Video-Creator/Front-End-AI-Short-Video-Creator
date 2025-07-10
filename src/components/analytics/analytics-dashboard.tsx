@@ -43,7 +43,7 @@ import {
         TabsTrigger,
 } from "@/components/ui/tabs"
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Calendar as CalendarIcon, RefreshCw } from "lucide-react"
+import { Calendar as CalendarIcon, RefreshCw, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { DateRange } from "react-day-picker"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"; // Thêm dòng này nếu bạn dùng hệ thống toast
@@ -53,6 +53,76 @@ const tableData = [
         { id: "VID002", title: "Mountain Trip", thumbnail: "https://images.pexels.com/videos/857134/free-video-857134.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500", views: 8901, likes: 180, comments: 22, shares: 8 },
         { id: "VID003", title: "Unboxing New Tech", thumbnail: "https://images.pexels.com/videos/3194248/free-video-3194248.jpg?auto=compress&cs=tinysrgb&dpr=1&w=500", views: 25402, likes: 512, comments: 128, shares: 64 },
 ]
+
+// Helper function to calculate growth rate
+const calculateGrowthRate = (chartData: any[], metric: string) => {
+        if (chartData.length < 2) return [];
+        
+        return chartData.map((item, index) => {
+                if (index === 0) {
+                        return { ...item, growthRate: 0 };
+                }
+                
+                const current = item[metric] || 0;
+                const previous = chartData[index - 1][metric] || 0;
+                
+                let growthRate = 0;
+                if (previous > 0) {
+                        growthRate = ((current - previous) / previous) * 100;
+                }
+                
+                return { ...item, growthRate: parseFloat(growthRate.toFixed(2)) };
+        });
+};
+
+// Growth Rate Card Component
+const GrowthRateCard = ({ chartData, metric, platform }: { chartData: any[], metric: string, platform: string }) => {
+        const growthData = calculateGrowthRate(chartData, metric);
+        
+        return (
+                <Card>
+                        <CardHeader>
+                                <CardTitle>Monthly Growth Rate</CardTitle>
+                                <CardDescription>
+                                        Month-over-month percentage change in {metric} for {platform}
+                                </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                                <div className="space-y-3">
+                                        {growthData.map((item, index) => {
+                                                const isPositive = item.growthRate > 0;
+                                                const isNegative = item.growthRate < 0;
+                                                const isNeutral = item.growthRate === 0;
+                                                
+                                                return (
+                                                        <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                                                                <div className="flex items-center gap-2">
+                                                                        <span className="font-medium">{item.month}</span>
+                                                                        <span className="text-sm text-muted-foreground">
+                                                                                ({item[metric]?.toLocaleString()} {metric})
+                                                                        </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1">
+                                                                        {isPositive && <TrendingUp className="h-4 w-4 text-green-500" />}
+                                                                        {isNegative && <TrendingDown className="h-4 w-4 text-red-500" />}
+                                                                        {isNeutral && <Minus className="h-4 w-4 text-gray-500" />}
+                                                                        <span className={cn(
+                                                                                "font-medium",
+                                                                                isPositive && "text-green-600",
+                                                                                isNegative && "text-red-600",
+                                                                                isNeutral && "text-gray-600"
+                                                                        )}>
+                                                                                {index === 0 ? "Baseline" : `${item.growthRate > 0 ? '+' : ''}${item.growthRate}%`}
+                                                                        </span>
+                                                                </div>
+                                                        </div>
+                                                );
+                                        })}
+                                </div>
+                        </CardContent>
+                </Card>
+        );
+};
 
 export function AnalyticsDashboard() {
         const now = new Date();
@@ -278,76 +348,87 @@ const AnalyticsTabContent = ({
 
         return (
                 <div className="space-y-6">
-                        <Card>
-                                <CardHeader className="flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                        <div className="flex-1">
-                                                <CardTitle>Statistics Over Time</CardTitle>
-                                                <CardDescription>
-                                                        Total {metricLabels[metric].toLowerCase()} for your {platform} videos in the selected date range.
-                                                </CardDescription>
-                                        </div>
-                                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                                <Select value={metric} onValueChange={setMetric}>
-                                                        <SelectTrigger className="w-full sm:w-[150px]">
-                                                                <SelectValue placeholder="Select metric" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                                <SelectItem value="views">Views</SelectItem>
-                                                                <SelectItem value="likes">Likes</SelectItem>
-                                                                <SelectItem value="comments">Comments</SelectItem>
-                                                                {platform !== "YouTube" && (
-                                                                        <SelectItem value="shares">Shares</SelectItem>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <Card>
+                                        <CardHeader className="flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                                <div className="flex-1">
+                                                        <CardTitle>Statistics Over Time</CardTitle>
+                                                        <CardDescription>
+                                                                Total {metricLabels[metric].toLowerCase()} for your {platform} videos in the selected date range.
+                                                        </CardDescription>
+                                                </div>
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                                        <Select value={metric} onValueChange={setMetric}>
+                                                                <SelectTrigger className="w-full sm:w-[150px]">
+                                                                        <SelectValue placeholder="Select metric" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                        <SelectItem value="views">Views</SelectItem>
+                                                                        <SelectItem value="likes">Likes</SelectItem>
+                                                                        <SelectItem value="comments">Comments</SelectItem>
+                                                                        {platform !== "YouTube" && (
+                                                                                <SelectItem value="shares">Shares</SelectItem>
+                                                                        )}
+                                                                </SelectContent>
+                                                        </Select>
+                                                        <RadioGroup defaultValue="bar" value={chartType} onValueChange={setChartType} className="flex items-center space-x-4">
+                                                                <div className="flex items-center space-x-2">
+                                                                        <RadioGroupItem value="bar" id={`r1-${platform}`} />
+                                                                        <Label htmlFor={`r1-${platform}`}>Bar</Label>
+                                                                </div>
+                                                                <div className="flex items-center space-x-2">
+                                                                        <RadioGroupItem value="line" id={`r2-${platform}`} />
+                                                                        <Label htmlFor={`r2-${platform}`}>Line</Label>
+                                                                </div>
+                                                        </RadioGroup>
+                                                </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                                {loading ? (
+                                                        <div>Loading...</div>
+                                                ) : (
+                                                        <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                                                                {chartType === "bar" ? (
+                                                                        <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                                                                                <CartesianGrid vertical={false} />
+                                                                                <XAxis
+                                                                                        dataKey="month"
+                                                                                        tickLine={false}
+                                                                                        tickMargin={10}
+                                                                                        axisLine={false}
+                                                                                />
+                                                                                <YAxis />
+                                                                                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                                                                <Bar dataKey={metric} fill={`var(--color-${metric})`} radius={8} />
+                                                                        </BarChart>
+                                                                ) : (
+                                                                        <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                                                                                <CartesianGrid vertical={false} />
+                                                                                <XAxis
+                                                                                        dataKey="month"
+                                                                                        tickLine={false}
+                                                                                        tickMargin={10}
+                                                                                        axisLine={false}
+                                                                                />
+                                                                                <YAxis />
+                                                                                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                                                                <Line type="monotone" dataKey={metric} stroke={`var(--color-${metric})`} strokeWidth={2} activeDot={{ r: 8 }} />
+                                                                        </LineChart>
                                                                 )}
-                                                        </SelectContent>
-                                                </Select>
-                                                <RadioGroup defaultValue="bar" value={chartType} onValueChange={setChartType} className="flex items-center space-x-4">
-                                                        <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="bar" id={`r1-${platform}`} />
-                                                                <Label htmlFor={`r1-${platform}`}>Bar</Label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value="line" id={`r2-${platform}`} />
-                                                                <Label htmlFor={`r2-${platform}`}>Line</Label>
-                                                        </div>
-                                                </RadioGroup>
-                                        </div>
-                                </CardHeader>
-                                <CardContent>
-                                        {loading ? (
-                                                <div>Loading...</div>
-                                        ) : (
-                                                <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                                                        {chartType === "bar" ? (
-                                                                <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                                                                        <CartesianGrid vertical={false} />
-                                                                        <XAxis
-                                                                                dataKey="month"
-                                                                                tickLine={false}
-                                                                                tickMargin={10}
-                                                                                axisLine={false}
-                                                                        />
-                                                                        <YAxis />
-                                                                        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                                                                        <Bar dataKey={metric} fill={`var(--color-${metric})`} radius={8} />
-                                                                </BarChart>
-                                                        ) : (
-                                                                <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                                                                        <CartesianGrid vertical={false} />
-                                                                        <XAxis
-                                                                                dataKey="month"
-                                                                                tickLine={false}
-                                                                                tickMargin={10}
-                                                                                axisLine={false}
-                                                                        />
-                                                                        <YAxis />
-                                                                        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                                                                        <Line type="monotone" dataKey={metric} stroke={`var(--color-${metric})`} strokeWidth={2} activeDot={{ r: 8 }} />
-                                                                </LineChart>
-                                                        )}
-                                                </ChartContainer>
-                                        )}
-                                </CardContent>
-                        </Card>
+                                                        </ChartContainer>
+                                                )}
+                                        </CardContent>
+                                </Card>
+                                
+                                {/* Growth Rate Card */}
+                                {!loading && chartData.length > 0 && (
+                                        <GrowthRateCard 
+                                                chartData={chartData} 
+                                                metric={metric} 
+                                                platform={platform} 
+                                        />
+                                )}
+                        </div>
                         <Card>
                                 <CardHeader>
                                         <CardTitle>Video Performance</CardTitle>

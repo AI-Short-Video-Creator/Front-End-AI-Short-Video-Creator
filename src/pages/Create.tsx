@@ -538,6 +538,7 @@ export default function Create() {
                   <DialogFooter>
                     <Button
                       variant="outline"
+                      onClick={() => setCreateNewDialog({ isOpen: false, name: "", description: "" })}
                     >
                       Cancel
                     </Button>

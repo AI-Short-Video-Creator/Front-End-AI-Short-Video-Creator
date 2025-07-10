@@ -29,12 +29,16 @@ interface CreativeEditorSDKProps {
     mediaUrls: mediaInfo[];
     multiSynthesisResponse: MultiSynthesisResponse | null;
   };
+  videoTitle?: string;
+  thumbnailUrl?: string;
 }
 
 const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
   downloadProgress,
   handleBack,
   mediaObject,
+  videoTitle,
+  thumbnailUrl,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +71,56 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
       engine.block.appendChild(page, track);
 
       let currentOffset = 0;
+
+      // Add title frame at the beginning if we have title or thumbnail
+      if (videoTitle || thumbnailUrl) {
+        const titleDuration = 3; // 3 seconds for title frame
+        
+        if (thumbnailUrl) {
+          // Create thumbnail graphic block
+          const thumbnailGraphic = engine.block.create("graphic");
+          engine.block.setShape(thumbnailGraphic, engine.block.createShape("rect"));
+          
+          const thumbnailFill = engine.block.createFill("image");
+          engine.block.setString(thumbnailFill, "fill/image/imageFileURI", thumbnailUrl);
+          engine.block.setFill(thumbnailGraphic, thumbnailFill);
+          
+          engine.block.setTimeOffset(thumbnailGraphic, currentOffset);
+          engine.block.setDuration(thumbnailGraphic, titleDuration);
+          engine.block.appendChild(track, thumbnailGraphic);
+          engine.block.fillParent(thumbnailGraphic);
+        }
+        
+        if (videoTitle) {
+          // Create title text block
+          const titleBlock = engine.block.create("text");
+          engine.block.appendChild(page, titleBlock);
+          engine.block.setString(titleBlock, "text/text", videoTitle);
+          engine.block.setTimeOffset(titleBlock, currentOffset);
+          engine.block.setDuration(titleBlock, titleDuration);
+
+          const titleWidth = pageW * 0.8;
+          const titleHeight = 200;
+          engine.block.setFloat(titleBlock, "position/x", (pageW - titleWidth) / 2);
+          engine.block.setFloat(titleBlock, "position/y", (pageH - titleHeight) / 2);
+          engine.block.setFloat(titleBlock, "width", titleWidth);
+          engine.block.setFloat(titleBlock, "height", titleHeight);
+
+          // Title styling
+          engine.block.setFloat(titleBlock, "text/fontSize", 15);
+          engine.block.setEnum(titleBlock, "text/horizontalAlignment", "Center");
+          engine.block.setEnum(titleBlock, "text/verticalAlignment", "Center");
+          
+          // Color settings - white text with black outline
+          engine.block.setColor(titleBlock, "fill/solid/color", { r: 1, g: 1, b: 1, a: 1 });
+          engine.block.setBool(titleBlock, "stroke/enabled", true);
+          engine.block.setColor(titleBlock, "stroke/color", { r: 0, g: 0, b: 0, a: 1 });
+          engine.block.setFloat(titleBlock, "stroke/width", 3);
+        }
+        
+        currentOffset += titleDuration;
+        console.log("Added title frame, currentOffset:", currentOffset);
+      }
 
       if( mediaObject.multiSynthesisResponse && mediaObject.multiSynthesisResponse.scenes && mediaObject.multiSynthesisResponse.scenes.length > 0) {
         mediaObject.multiSynthesisResponse.scenes.forEach(async (sceneData, index) => {
@@ -136,6 +190,15 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
         });
       }
       engine.block.setDuration(page, currentOffset);
+
+      // Note: CreativeEditorSDK doesn't have a direct setThumbnailURI method.
+      // The thumbnail will be handled during export or can be used in the UI.
+      if (thumbnailUrl) {
+        console.log("Thumbnail URL available for use:", thumbnailUrl);
+        // Optionally, you could add the thumbnail as a graphic block at the beginning
+        // or use it as a poster frame during video export
+      }
+
     } catch (error) {
       console.error("createSceneFromMediaObject failed", error);
       toast({
@@ -187,7 +250,11 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
               URL.revokeObjectURL(url);
               // Upload to backend using custom hook
               try {
-                await uploadVideoAsync(exportBlob);
+                await uploadVideoAsync({ 
+                  videoFile: exportBlob, 
+                  title: videoTitle, 
+                  thumbnail: thumbnailUrl 
+                });
               } catch (e) {
                 console.error('Video upload failed:', e);
               }
@@ -309,7 +376,14 @@ const CreativeEditor: React.FC<CreativeEditorSDKProps> = ({
   return (
     <Card className="mx-auto" style={{ width: "80vw", height: "100%" }}>
       <CardHeader>
-        <CardTitle>Video Editor</CardTitle>
+        <CardTitle>
+          Video Editor
+          {videoTitle && (
+            <span className="text-sm font-normal text-gray-600 ml-2">
+              - {videoTitle}
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div

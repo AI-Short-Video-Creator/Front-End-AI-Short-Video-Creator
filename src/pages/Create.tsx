@@ -225,15 +225,6 @@ export default function Create() {
     setThumbnailUrl(thumbnail);
   };
 
-  // const handleCreateVideo = async () => {
-  //   console.log("Creating video...");
-  //   setCurrentStep(5);
-  // };
-
-  const handleSelectVoice = (voiceId: any) => {
-    setSelectedVoice(voiceId);
-  };
-
   const handleDownload = () => {
     console.log("Preparing download...");
     let progress = 0;
@@ -266,11 +257,6 @@ export default function Create() {
       })
     })
   };
-
-  // const extractNarrtion = (script: string) => {
-  //   const narrationLines = script.split(/\r?\n/).filter(line => line.trim().startsWith("Narration:"));
-  //   return narrationLines.map(line => line.slice("Narration:".length).trim()).join("\n");
-  // }
 
   const handleGenerateAudio = async () => {
     let payload;
@@ -464,14 +450,16 @@ export default function Create() {
                   <ImageCreation 
                     selectedVoice={selectedVoice}
                     handleBack={handleBack}
-                    handleSelectVoice={handleSelectVoice}
-                    // handleCreateVideo={handleCreateVideo}
                     script={script}
                     imageUrls={imageUrls}
                     sessionId={sessionId}
                     handleNextStep={handleNextStep}
                     onImageUpdate={handleImageUrlUpdate}
-                    onVideoMetaUpdate={handleVideoMetaUpdate}
+                    videoTitle={videoTitle}
+                    thumbnailUrl={thumbnailUrl}
+                    setVideoTitle={setVideoTitle}
+                    setThumbnailUrl={setThumbnailUrl}
+                    // onVideoMetaUpdate={handleVideoMetaUpdate}
                   />
                 </div>
               )}

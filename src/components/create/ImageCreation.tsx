@@ -12,14 +12,16 @@ import { Label } from "@/components/ui/label";
 interface ImageCreationProps {
   selectedVoice: number | null;
   handleBack: () => void;
-  handleSelectVoice: (voiceId: number) => void;
-  // handleCreateVideo: () => void;
   script: string;
   imageUrls: ImageInfo[];
   sessionId: string;
   handleNextStep?: () => void;
   onImageUpdate?: (index: number, newImageData: ImageInfo) => void;
-  onVideoMetaUpdate?: (title: string, thumbnail: string) => void;
+  videoTitle?: string;
+  thumbnailUrl?: string;
+  setVideoTitle?: (title: string) => void;
+  setThumbnailUrl?: (thumbnail: string) => void;
+  // onVideoMetaUpdate?: (title: string, thumbnail: string) => void;
 }
 
 type ImageInfo = {
@@ -32,14 +34,16 @@ type ImageInfo = {
 export function ImageCreation({
   selectedVoice,
   handleBack,
-  handleSelectVoice,
-  // handleCreateVideo,
   script,
   imageUrls,
   sessionId,
   handleNextStep,
   onImageUpdate,
-  onVideoMetaUpdate,
+  videoTitle,
+  thumbnailUrl,
+  setVideoTitle,
+  setThumbnailUrl,
+  // onVideoMetaUpdate,
 
 }: ImageCreationProps) {
   const { regenerateImageAsync, isCreatingImage, isRegeneratingImage, createImagetAsync } = useImage();
@@ -47,8 +51,8 @@ export function ImageCreation({
   const { toast } = useToast();
   const [images, setImages] = React.useState<ImageInfo[]>(imageUrls);
   const [regeneratingImages, setRegeneratingImages] = React.useState<Set<string>>(new Set());
-  const [videoTitle, setVideoTitle] = React.useState("");
-  const [thumbnailUrl, setThumbnailUrl] = React.useState("");
+  // const [videoTitle, setVideoTitle] = React.useState("");
+  // const [thumbnailUrl, setThumbnailUrl] = React.useState("");
   const [isGeneratingThumbnail, setIsGeneratingThumbnail] = React.useState(false);
 
   React.useEffect(() => {
@@ -163,14 +167,14 @@ export function ImageCreation({
     }
   };
 
-  const handleNextWithMeta = () => {
-    if (onVideoMetaUpdate) {
-      onVideoMetaUpdate(videoTitle, thumbnailUrl);
-    }
-    if (handleNextStep) {
-      handleNextStep();
-    }
-  };
+  // const handleNextWithMeta = () => {
+  //   if (onVideoMetaUpdate) {
+  //     onVideoMetaUpdate(videoTitle, thumbnailUrl);
+  //   }
+  //   if (handleNextStep) {
+  //     handleNextStep();
+  //   }
+  // };
 
   return (
     <Card>
@@ -288,7 +292,7 @@ export function ImageCreation({
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <Button
-            onClick={handleNextWithMeta}
+            onClick={handleNextStep}
             variant="outline"
           >
             Next <ArrowRight className="ml-2 h-4 w-4" />

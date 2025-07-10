@@ -25,6 +25,8 @@ export interface WorkspaceData {
   
   // Step 5: Video Creation
   videoUrl?: string;
+  videoTitle?: string;
+  thumbnailUrl?: string;
   
   // Metadata
   totalSteps: number;
@@ -82,6 +84,8 @@ export interface CreateWorkspaceRequest {
   imageUrls?: MediaInfo[];
   sessionId?: string;
   videoUrl?: string;
+  videoTitle?: string;
+  thumbnailUrl?: string;
   totalSteps?: number;
   currentStep?: number;
   isCompleted?: boolean;
@@ -100,6 +104,8 @@ export interface UpdateWorkspaceRequest {
   imageUrls?: MediaInfo[];
   sessionId?: string;
   videoUrl?: string;
+  videoTitle?: string;
+  thumbnailUrl?: string;
   totalSteps?: number;
   currentStep?: number;
   isCompleted?: boolean;
